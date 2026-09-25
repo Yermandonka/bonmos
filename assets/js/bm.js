@@ -585,9 +585,17 @@
     var boton = document.querySelector('.hamburguesa');
     if (!boton) { return; }
     var rutas = [['La carta', '/'], ['Contacto', '/contacto']];
+    function esActual(ruta) {
+      return location.pathname === ruta || (ruta === '/' && (pagina === 'carta' || pagina === 'plato'));
+    }
+    // En ordenador, las páginas van directamente en la cabecera
+    var navEscritorio = h('nav', { class: 'nav-escritorio', 'aria-label': 'Menú' }, rutas.map(function (par) {
+      return h('a', { href: par[1], class: esActual(par[1]) ? 'actual' : '', texto: par[0] });
+    }));
+    boton.parentElement.insertBefore(navEscritorio, boton);
+
     var menu = h('nav', { class: 'menu-panel', 'aria-label': 'Menú' }, rutas.map(function (par) {
-      var actual = location.pathname === par[1] || (par[1] === '/' && (pagina === 'carta' || pagina === 'plato'));
-      return h('a', { href: par[1], class: actual ? 'actual' : '', texto: par[0] });
+      return h('a', { href: par[1], class: esActual(par[1]) ? 'actual' : '', texto: par[0] });
     }));
     // Fuera de la cabecera: WebKit (iPhone) recorta los hijos absolutos
     // de un elemento con backdrop-filter, y el panel no se veía.
