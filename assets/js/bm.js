@@ -555,57 +555,6 @@
     }
   }
 
-  // ---------- Tarifas ----------
-
-  function renderTarifas() {
-    app.textContent = '';
-    var menus = [
-      {
-        nombre: 'Menú Terreta', precio: '39 €', unidad: 'por persona · mínimo 4',
-        incluye: ['Esgarraet y entrante de temporada para compartir', 'Arroz a elegir de la carta, hecho en tu cocina', 'Dulce de la casa y café'],
-      },
-      {
-        nombre: 'Menú Bon Mos', precio: '55 €', unidad: 'por persona · mínimo 4', estrella: true,
-        incluye: ['Aperitivo de bienvenida', 'Tres entrantes de mercado para compartir', 'Arroz o principal a elegir', 'Postre, mistela y sobremesa sin prisa'],
-      },
-      {
-        nombre: 'Gran Mesa', precio: 'desde 25 €', unidad: 'por persona · a partir de 12',
-        incluye: ['Paella o fideuà a leña, cocinada en directo', 'Entrantes fríos de la huerta', 'Ideal para celebraciones y familias grandes'],
-      },
-    ];
-    var rejilla = h('section', { class: 'rejilla tarifas' }, menus.map(function (m) {
-      return h('article', { class: 'panel tarifa' + (m.estrella ? ' tarifa-estrella' : '') }, [
-        m.estrella ? h('span', { class: 'sobre-titulo', texto: 'El favorito' }) : null,
-        h('h2', { texto: m.nombre }),
-        h('p', { class: 'tarifa-precio' }, [
-          document.createTextNode(m.precio + ' '),
-          h('small', { texto: m.unidad }),
-        ]),
-        h('ul', { class: 'lista-ingredientes lista-mercado' }, m.incluye.map(function (t) {
-          return h('li', {}, [h('span', { texto: t })]);
-        })),
-        h('a', { class: 'boton boton-sorpresa', href: waTexto('Hola! Me interesa el ' + m.nombre + ' de Bon Mos. ¿Hablamos?'), target: '_blank', rel: 'noopener', texto: 'Reservar fecha' }),
-      ]);
-    }));
-    app.appendChild(h('header', { class: 'receta-cabecera' }, [
-      h('span', { class: 'sobre-titulo', texto: 'Chef privado a domicilio' }),
-      h('h1', { texto: 'Tarifas' }),
-      h('p', { class: 'prosa receta-descripcion', texto: 'Precio cerrado por persona, sin sorpresas: incluye la compra del producto del día, la cocina en tu casa, el servicio y dejarlo todo recogido.' }),
-    ]));
-    app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
-    app.appendChild(rejilla);
-    app.appendChild(h('section', { class: 'panel tarifa-extras' }, [
-      h('h2', { texto: 'Extras' }),
-      h('ul', { class: 'lista-ingredientes lista-mercado' }, [
-        h('li', {}, [h('span', { texto: 'Maridaje de vinos valencianos — +15 € por persona' })]),
-        h('li', {}, [h('span', { texto: 'Merienda de horchata de chufa y fartons — 8 € por persona' })]),
-        h('li', {}, [h('span', { texto: 'Desplazamiento incluido hasta 25 km de València' })]),
-      ]),
-      h('p', { class: 'panel-nota', texto: 'Alergias, intolerancias o antojos: se adapta cualquier menú, solo hay que contarlo al reservar.' }),
-    ]));
-    revelar([].slice.call(app.querySelectorAll('.tarifa, .tarifa-extras')));
-  }
-
   // ---------- Contacto ----------
 
   function renderContacto() {
@@ -635,19 +584,34 @@
   function initMenu() {
     var boton = document.querySelector('.hamburguesa');
     if (!boton) { return; }
-    var rutas = [['La carta', '/'], ['Tarifas', '/tarifas'], ['Contacto', '/contacto']];
+    var rutas = [['La carta', '/'], ['Contacto', '/contacto']];
     var menu = h('nav', { class: 'menu-panel', 'aria-label': 'Menú' }, rutas.map(function (par) {
       var actual = location.pathname === par[1] || (par[1] === '/' && (pagina === 'carta' || pagina === 'plato'));
       return h('a', { href: par[1], class: actual ? 'actual' : '', texto: par[0] });
     }));
-    boton.parentElement.appendChild(menu);
+    // Fuera de la cabecera: WebKit (iPhone) recorta los hijos absolutos
+    // de un elemento con backdrop-filter, y el panel no se veía.
+    document.body.appendChild(menu);
+
+    function colocar() {
+      var r = boton.getBoundingClientRect();
+      menu.style.top = (r.bottom + 10) + 'px';
+      menu.style.right = Math.max(10, window.innerWidth - r.right) + 'px';
+    }
 
     function alternar(abrir) {
+      if (abrir) { colocar(); }
       boton.classList.toggle('abierto', abrir);
       menu.classList.toggle('abierto', abrir);
       boton.setAttribute('aria-expanded', abrir ? 'true' : 'false');
       if (abrir && navigator.vibrate) { navigator.vibrate(8); }
     }
+    window.addEventListener('resize', function () {
+      if (menu.classList.contains('abierto')) { colocar(); }
+    });
+    window.addEventListener('scroll', function () {
+      if (menu.classList.contains('abierto')) { colocar(); }
+    }, { passive: true });
     boton.addEventListener('click', function (ev) {
       ev.stopPropagation();
       alternar(!menu.classList.contains('abierto'));
@@ -669,7 +633,6 @@
     if (pagina === 'carta') { renderCarta(d); }
     else if (pagina === 'plato') { renderPlato(d); }
     else if (pagina === 'panel') { entrarPanel(d); }
-    else if (pagina === 'tarifas') { renderTarifas(); }
     else if (pagina === 'contacto') { renderContacto(); }
   }).catch(function (e) {
     app.textContent = '';

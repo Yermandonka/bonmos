@@ -80,7 +80,7 @@ img { max-width: 100%; }
               inset 0 -1px 0 rgba(32, 24, 18, 0.12);
 }
 
-@supports not (backdrop-filter: blur(1px)) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .cabecera { background: rgba(43, 33, 23, 0.85); }
 }
 
@@ -155,11 +155,11 @@ img { max-width: 100%; }
 .hamburguesa.abierto span:nth-child(2) { opacity: 0; transform: scaleX(0.4); }
 .hamburguesa.abierto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-/* Panel del menú: cristal colgando de la píldora */
+/* Panel del menú: cristal colgando de la píldora (fijo y fuera de la
+   cabecera: WebKit recorta los hijos de un elemento con backdrop-filter) */
 .menu-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  position: fixed;
+  z-index: 30;
   min-width: 210px;
   padding: 0.55rem;
   border-radius: 22px;
@@ -205,7 +205,7 @@ img { max-width: 100%; }
 
 .menu-panel a.actual { color: var(--naranja-vivo); }
 
-@supports not (backdrop-filter: blur(1px)) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .menu-panel { background: rgba(43, 33, 23, 0.94); }
 }
 
@@ -969,40 +969,7 @@ img { max-width: 100%; }
 
 .admin-item-botones .boton { padding: 0.45rem 0.95rem; font-size: 0.75rem; }
 
-/* ---------- Tarifas y contacto ---------- */
-.tarifas { margin-top: 0.4rem; }
-
-.tarifa { display: flex; flex-direction: column; gap: 0.55rem; }
-
-.tarifa h2 { border: 0; padding: 0; margin: 0; }
-
-.tarifa .lista-mercado { flex: 1; }
-
-.tarifa-precio {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 700;
-  font-size: 2.1rem;
-  color: var(--naranja-oscuro);
-  line-height: 1.1;
-}
-
-.tarifa-precio small {
-  display: block;
-  font-family: 'Jost', sans-serif;
-  font-weight: 400;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--texto-suave);
-  margin-top: 0.25rem;
-}
-
-.tarifa-estrella { border: 2px solid rgba(192, 99, 24, 0.45); }
-
-.tarifa .boton { margin-top: 0.6rem; }
-
-.tarifa-extras { margin-top: 1.1rem; }
-
+/* ---------- Contacto ---------- */
 .contacto { max-width: 560px; margin: 0 auto; }
 
 .contacto-botones { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1rem; }
@@ -1025,7 +992,7 @@ img { max-width: 100%; }
   box-shadow: 0 12px 34px rgba(32, 24, 18, 0.16), inset 0 1px 0 rgba(255, 250, 240, 0.3);
 }
 
-@supports not (backdrop-filter: blur(1px)) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .pie { background: rgba(43, 33, 23, 0.85); }
 }
 
