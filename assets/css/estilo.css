@@ -21,7 +21,7 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; font-size: 106.25%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-size: 106.25%; }
 
 body {
   font-family: 'Jost', 'Century Gothic', sans-serif;
@@ -251,13 +251,18 @@ img { max-width: 100%; }
 
 .buscador input {
   flex: 1;
+  min-width: 0;
   font: inherit;
-  padding: 0.7rem 1rem;
+  font-size: 16px; /* fijo: evita el inflado y el zoom automático de iOS */
+  padding: 0.65rem 1rem;
   border: 1px solid var(--filete);
   border-radius: 999px;
   background: var(--papel);
   color: var(--tinta);
+  -webkit-text-size-adjust: 100%;
 }
+
+.buscador input::placeholder { font-size: 15px; color: var(--texto-suave); opacity: 0.8; }
 
 .buscador input:focus, .formulario input:focus, .formulario select:focus, .formulario textarea:focus {
   outline: none;
@@ -1084,7 +1089,8 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
   .tarjeta-pie { font-size: 0.9rem; }
   .tarjeta-ver { font-size: 0.82rem; }
   .filtro { font-size: 0.86rem; padding: 0.45rem 1.05rem; }
-  .buscador input { font-size: 1rem; }
+  .buscador { gap: 0.45rem; }
+  .buscador input { font-size: 16px; padding: 0.6rem 0.95rem; }
   .receta-cabecera h1 { font-size: 1.95rem; }
   .receta-foto { height: 200px; }
   .receta-descripcion { font-size: 1.18rem; }
