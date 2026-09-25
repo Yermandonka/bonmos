@@ -49,15 +49,19 @@ async function db() {
   return sql;
 }
 
+export async function leerPlatos() {
+  if (!URL_DB) {
+    return { platos: SEED, demo: true };
+  }
+  const sql = await db();
+  const platos = await sql`SELECT * FROM platos ORDER BY destacada DESC, creada_en DESC`;
+  return { platos, demo: false };
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      if (!URL_DB) {
-        return res.status(200).json({ platos: SEED, demo: true });
-      }
-      const sql = await db();
-      const platos = await sql`SELECT * FROM platos ORDER BY destacada DESC, creada_en DESC`;
-      return res.status(200).json({ platos, demo: false });
+      return res.status(200).json(await leerPlatos());
     }
 
     if (req.method === 'POST' || req.method === 'DELETE') {

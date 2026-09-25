@@ -2,7 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/plato/:slug", "destination": "/plato.html" }
+    { "source": "/plato/:slug", "destination": "/api/plato?slug=:slug" }
   ],
   "headers": [
     {
