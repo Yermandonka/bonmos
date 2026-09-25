@@ -409,7 +409,7 @@
       ]),
     ]));
     if (d.demo) {
-      seccion.appendChild(h('p', { class: 'alerta', texto: 'Modo demostración: la carta es de ejemplo. Para publicar de verdad, crea una base de datos Neon y un Blob store en la pestaña Storage del proyecto en Vercel.' }));
+      seccion.appendChild(h('p', { class: 'alerta', texto: 'Modo demostración: la carta es de ejemplo. Para publicar de verdad, crea un Blob store en la pestaña Storage del proyecto en Vercel.' }));
     }
     seccion.appendChild(aviso);
 

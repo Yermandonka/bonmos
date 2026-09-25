@@ -1,7 +1,9 @@
-import { neon } from '@neondatabase/serverless';
+// La carta vive como un JSON en Vercel Blob — sin base de datos externa.
+import { put, list } from '@vercel/blob';
 import { SEED } from './_seed.js';
 
-const URL_DB = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+const RUTA = 'datos/carta.json';
+const HAY_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 function slugificar(t) {
   return (t || '')
@@ -12,57 +14,66 @@ function slugificar(t) {
     .replace(/^-+|-+$/g, '') || 'plato';
 }
 
-function sinClave(req) {
+function conClave(req) {
   const clave = process.env.PANEL_CLAVE;
-  return !clave || req.headers['x-clave'] !== clave;
+  return clave && req.headers['x-clave'] === clave;
 }
 
-let lista = null;
+async function leerCrudo() {
+  const { blobs } = await list({ prefix: RUTA, limit: 1 });
+  if (!blobs.length) { return null; }
+  // Cache-buster: el CDN de Blob cachea por URL completa
+  const r = await fetch(blobs[0].url + '?v=' + Date.now());
+  if (!r.ok) { return null; }
+  return r.json();
+}
 
-export async function db() {
-  const sql = neon(URL_DB);
-  if (!lista) {
-    await sql`CREATE TABLE IF NOT EXISTS platos (
-      id SERIAL PRIMARY KEY,
-      titulo TEXT NOT NULL,
-      slug TEXT NOT NULL UNIQUE,
-      categoria TEXT NOT NULL DEFAULT 'principal',
-      descripcion TEXT NOT NULL DEFAULT '',
-      ingredientes TEXT NOT NULL DEFAULT '',
-      consejo TEXT NOT NULL DEFAULT '',
-      notas TEXT NOT NULL DEFAULT '',
-      tiempo_min INT NOT NULL DEFAULT 60,
-      comensales INT NOT NULL DEFAULT 4,
-      foto TEXT NOT NULL DEFAULT '',
-      destacada INT NOT NULL DEFAULT 0,
-      creada_en TIMESTAMPTZ NOT NULL DEFAULT now()
-    )`;
-    await sql`CREATE TABLE IF NOT EXISTS ajustes (
-      clave TEXT PRIMARY KEY,
-      valor TEXT NOT NULL DEFAULT ''
-    )`;
-    const [{ n }] = await sql`SELECT count(*)::int AS n FROM platos`;
-    if (n === 0) {
-      for (const p of SEED) {
-        await sql`INSERT INTO platos (titulo, slug, categoria, descripcion, ingredientes, consejo, tiempo_min, comensales, foto, destacada)
-                  VALUES (${p.titulo}, ${p.slug}, ${p.categoria}, ${p.descripcion}, ${p.ingredientes}, ${p.consejo}, ${p.tiempo_min}, ${p.comensales}, ${p.foto}, ${p.destacada})`;
-      }
-    }
-    lista = true;
+export async function guardarCrudo(datos) {
+  await put(RUTA, JSON.stringify(datos), {
+    access: 'public',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 60,
+  });
+}
+
+export async function leerDatos() {
+  let d = await leerCrudo();
+  if (!d || !Array.isArray(d.platos)) {
+    d = { platos: SEED.map(function (p) { return { ...p, creada_en: new Date().toISOString() }; }), ajustes: {}, siguienteId: SEED.length + 1 };
+    await guardarCrudo(d);
   }
-  return sql;
+  if (!d.ajustes) { d.ajustes = {}; }
+  if (!d.siguienteId) { d.siguienteId = d.platos.reduce(function (m, p) { return Math.max(m, p.id); }, 0) + 1; }
+  return d;
 }
 
 export async function leerPlatos() {
-  if (!URL_DB) {
+  if (!HAY_BLOB) {
     return { platos: SEED, demo: true, ajustes: {} };
   }
-  const sql = await db();
-  const platos = await sql`SELECT * FROM platos ORDER BY destacada DESC, creada_en DESC`;
-  const filas = await sql`SELECT clave, valor FROM ajustes`;
-  const ajustes = {};
-  for (const f of filas) { ajustes[f.clave] = f.valor; }
-  return { platos, demo: false, ajustes };
+  const d = await leerDatos();
+  const platos = d.platos.slice().sort(function (a, b) {
+    return (b.destacada - a.destacada) || String(b.creada_en || '').localeCompare(String(a.creada_en || ''));
+  });
+  return { platos, demo: false, ajustes: d.ajustes };
+}
+
+export function errorConfiguracion(req, res) {
+  if (!HAY_BLOB) {
+    res.status(503).json({ error: 'Sin almacén: crea un Blob store en la pestaña Storage de tu proyecto en Vercel y redepliega.' });
+    return true;
+  }
+  if (!process.env.PANEL_CLAVE) {
+    res.status(503).json({ error: 'El panel no tiene clave configurada: añade la variable PANEL_CLAVE en Vercel.' });
+    return true;
+  }
+  if (!conClave(req)) {
+    res.status(401).json({ error: 'Clave del chef incorrecta.' });
+    return true;
+  }
+  return false;
 }
 
 export default async function handler(req, res) {
@@ -72,21 +83,14 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST' || req.method === 'DELETE') {
-      if (!URL_DB) {
-        return res.status(503).json({ error: 'Sin base de datos: crea una base Neon en la pestaña Storage de tu proyecto en Vercel y redepliega.' });
-      }
-      if (!process.env.PANEL_CLAVE) {
-        return res.status(503).json({ error: 'El panel no tiene clave configurada: añade la variable PANEL_CLAVE en Vercel.' });
-      }
-      if (sinClave(req)) {
-        return res.status(401).json({ error: 'Clave del chef incorrecta.' });
-      }
-      const sql = await db();
+      if (errorConfiguracion(req, res)) { return; }
+      const d = await leerDatos();
 
       if (req.method === 'DELETE') {
         const id = parseInt(new URL(req.url, 'http://x').searchParams.get('id') || '0', 10);
-        if (!id) return res.status(400).json({ error: 'Falta el id.' });
-        await sql`DELETE FROM platos WHERE id = ${id}`;
+        if (!id) { return res.status(400).json({ error: 'Falta el id.' }); }
+        d.platos = d.platos.filter(function (p) { return p.id !== id; });
+        await guardarCrudo(d);
         return res.status(200).json({ ok: true });
       }
 
@@ -96,8 +100,15 @@ export default async function handler(req, res) {
       if (!titulo || !ingredientes) {
         return res.status(400).json({ error: 'Título e ingredientes son obligatorios.' });
       }
-      const datos = {
+      const id = parseInt(b.id, 10) || 0;
+      let slug = slugificar(titulo);
+      if (d.platos.some(function (p) { return p.slug === slug && p.id !== id; })) {
+        slug += '-' + Math.random().toString(36).slice(2, 6);
+      }
+      const plato = {
+        id: id || d.siguienteId,
         titulo,
+        slug,
         categoria: (b.categoria || 'principal').trim(),
         descripcion: (b.descripcion || '').trim(),
         ingredientes,
@@ -108,21 +119,17 @@ export default async function handler(req, res) {
         foto: (b.foto || '').trim(),
         destacada: b.destacada ? 1 : 0,
       };
-      let slug = slugificar(titulo);
-      const id = parseInt(b.id, 10) || 0;
-      const [choca] = await sql`SELECT id FROM platos WHERE slug = ${slug} AND id != ${id}`;
-      if (choca) slug += '-' + Math.random().toString(36).slice(2, 6);
-
       if (id) {
-        await sql`UPDATE platos SET titulo=${datos.titulo}, slug=${slug}, categoria=${datos.categoria},
-          descripcion=${datos.descripcion}, ingredientes=${datos.ingredientes}, consejo=${datos.consejo},
-          notas=${datos.notas}, tiempo_min=${datos.tiempo_min}, comensales=${datos.comensales},
-          foto=${datos.foto}, destacada=${datos.destacada} WHERE id=${id}`;
+        const i = d.platos.findIndex(function (p) { return p.id === id; });
+        if (i === -1) { return res.status(404).json({ error: 'Ese plato ya no está en la carta.' }); }
+        plato.creada_en = d.platos[i].creada_en;
+        d.platos[i] = plato;
       } else {
-        await sql`INSERT INTO platos (titulo, slug, categoria, descripcion, ingredientes, consejo, notas, tiempo_min, comensales, foto, destacada)
-          VALUES (${datos.titulo}, ${slug}, ${datos.categoria}, ${datos.descripcion}, ${datos.ingredientes}, ${datos.consejo},
-                  ${datos.notas}, ${datos.tiempo_min}, ${datos.comensales}, ${datos.foto}, ${datos.destacada})`;
+        plato.creada_en = new Date().toISOString();
+        d.platos.push(plato);
+        d.siguienteId += 1;
       }
+      await guardarCrudo(d);
       return res.status(200).json({ ok: true, slug });
     }
 

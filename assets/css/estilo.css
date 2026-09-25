@@ -67,15 +67,21 @@ img { max-width: 100%; }
   padding: 0.55rem 0.7rem 0.55rem 0.6rem;
   width: min(1080px, calc(100% - 1.6rem));
   margin: 0.8rem auto 0;
-  background: rgba(43, 33, 23, 0.72);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  backdrop-filter: blur(18px) saturate(1.5);
-  border: 1px solid rgba(247, 239, 221, 0.16);
+  background: linear-gradient(rgba(52, 40, 28, 0.42), rgba(43, 33, 23, 0.38));
+  -webkit-backdrop-filter: blur(28px) saturate(1.9);
+  backdrop-filter: blur(28px) saturate(1.9);
+  border: 1px solid rgba(247, 239, 221, 0.28);
   border-radius: 999px;
   position: sticky;
   top: 0.7rem;
   z-index: 10;
-  box-shadow: 0 10px 30px rgba(32, 24, 18, 0.28), inset 0 1px 0 rgba(247, 239, 221, 0.12);
+  box-shadow: 0 12px 34px rgba(32, 24, 18, 0.18),
+              inset 0 1px 0 rgba(255, 250, 240, 0.35),
+              inset 0 -1px 0 rgba(32, 24, 18, 0.12);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .cabecera { background: rgba(43, 33, 23, 0.85); }
 }
 
 .marca {
@@ -877,18 +883,22 @@ img { max-width: 100%; }
 
 /* ---------- Pie: tarjeta flotante de cristal ---------- */
 .pie {
-  background: rgba(43, 33, 23, 0.78);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  backdrop-filter: blur(18px) saturate(1.5);
+  background: linear-gradient(rgba(52, 40, 28, 0.5), rgba(43, 33, 23, 0.46));
+  -webkit-backdrop-filter: blur(28px) saturate(1.9);
+  backdrop-filter: blur(28px) saturate(1.9);
   color: var(--crema-clara);
-  border: 1px solid rgba(247, 239, 221, 0.16);
+  border: 1px solid rgba(247, 239, 221, 0.28);
   border-radius: 26px;
   overflow: hidden;
   text-align: center;
   padding: 1.6rem 1.2rem 1.8rem;
   width: min(1080px, calc(100% - 1.6rem));
   margin: auto auto 0.9rem;
-  box-shadow: 0 10px 30px rgba(32, 24, 18, 0.22), inset 0 1px 0 rgba(247, 239, 221, 0.12);
+  box-shadow: 0 12px 34px rgba(32, 24, 18, 0.16), inset 0 1px 0 rgba(255, 250, 240, 0.3);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .pie { background: rgba(43, 33, 23, 0.85); }
 }
 
 /* Cenefa de azulejos muy tenue, a punta de pluma */
