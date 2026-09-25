@@ -67,15 +67,12 @@ img { max-width: 100%; }
   padding: 0.55rem 0.7rem 0.55rem 0.6rem;
   width: min(1080px, calc(100% - 1.6rem));
   margin: 0.8rem auto 0;
-  /* Marrón sólido atravesado por tres líneas blancas finas y discontinuas */
+  /* Marrón sólido con tres trazos blancos artísticos: curvas en ángulos
+     distintos, finas, discontinuas y levemente difuminadas */
   background-color: #4e3a28;
-  background-image:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0 16px, transparent 16px 30px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0 12px, transparent 12px 26px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0 18px, transparent 18px 34px);
-  background-size: 30px 1px, 26px 1px, 34px 1px;
-  background-position: 0 25%, 8px 50%, 3px 75%;
-  background-repeat: repeat-x;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 70' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='p' x='-5%25' y='-60%25' width='110%25' height='220%25'%3E%3CfeGaussianBlur stdDeviation='0.7'/%3E%3C/filter%3E%3C/defs%3E%3Cg fill='none' stroke='%23fdf8ee' filter='url(%23p)'%3E%3Cpath d='M-10 16 C 220 4, 480 34, 910 10' stroke-width='0.8' stroke-opacity='0.4' stroke-dasharray='16 11'/%3E%3Cpath d='M-10 40 C 260 56, 560 22, 910 50' stroke-width='0.7' stroke-opacity='0.34' stroke-dasharray='11 15'/%3E%3Cpath d='M-10 62 C 300 46, 620 70, 910 28' stroke-width='0.8' stroke-opacity='0.38' stroke-dasharray='20 13'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   position: sticky;
