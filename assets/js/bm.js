@@ -186,9 +186,9 @@
     return t;
   }
 
-  function renderCarta(d) {
+  // Portada: plato de la casa y rejilla, sin buscador ni filtros
+  function renderInicio(d) {
     var platos = d.platos;
-    var cat = '', busca = '';
     app.textContent = '';
 
     var destacada = platos.find(function (p) { return p.destacada; }) || platos[0];
@@ -204,7 +204,24 @@
       ]);
       heroTarjeta.addEventListener('click', function (ev) { ev.preventDefault(); abrirHoja(destacada, heroTarjeta); });
       app.appendChild(h('section', { class: 'hero' }, [heroTarjeta]));
+      revelar([heroTarjeta]);
     }
+
+    app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
+    var rejilla = h('section', { class: 'rejilla' });
+    platos.forEach(function (p) {
+      if (destacada && p.id === destacada.id) { return; }
+      rejilla.appendChild(tarjeta(p));
+    });
+    app.appendChild(rejilla);
+    revelar([].slice.call(rejilla.children));
+  }
+
+  // La carta: buscador y filtros arriba del todo, y todos los platos
+  function renderCarta(d) {
+    var platos = d.platos;
+    var cat = '', busca = '';
+    app.textContent = '';
 
     var rejilla = h('section', { class: 'rejilla' });
 
@@ -216,7 +233,7 @@
           var t = (p.titulo + ' ' + p.descripcion + ' ' + p.ingredientes).toLowerCase();
           return t.indexOf(busca.toLowerCase()) !== -1;
         }
-        return !(destacada && !cat && !busca && p.id === destacada.id);
+        return true;
       });
       if (!lista.length) {
         rejilla.appendChild(h('p', { class: 'vacio', texto: 'No hay platos por aquí todavía.' }));
@@ -257,8 +274,6 @@
     app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
     app.appendChild(rejilla);
     pinta();
-    var heroEl = app.querySelector('.hero-tarjeta');
-    if (heroEl) { revelar([heroEl]); }
   }
 
   // ---------- Ficha del plato ----------
@@ -270,7 +285,7 @@
     if (!p) {
       app.appendChild(h('p', { class: 'vacio' }, [
         document.createTextNode('Ese plato no está en la carta. '),
-        h('a', { href: '/', texto: 'Volver a la carta' }),
+        h('a', { href: '/carta', texto: 'Volver a la carta' }),
       ]));
       return;
     }
@@ -326,7 +341,7 @@
           ]),
         ]),
       ]),
-      h('p', { class: 'volver' }, [h('a', { href: '/', texto: 'Volver a la carta' })]),
+      h('p', { class: 'volver' }, [h('a', { href: '/carta', texto: 'Volver a la carta' })]),
     ]));
   }
 
@@ -584,9 +599,11 @@
   function initMenu() {
     var boton = document.querySelector('.hamburguesa');
     if (!boton) { return; }
-    var rutas = [['La carta', '/'], ['Contacto', '/contacto']];
+    var rutas = [['Inicio', '/'], ['La carta', '/carta'], ['Contacto', '/contacto']];
     function esActual(ruta) {
-      return location.pathname === ruta || (ruta === '/' && (pagina === 'carta' || pagina === 'plato'));
+      if (ruta === '/') { return pagina === 'inicio'; }
+      if (ruta === '/carta') { return pagina === 'carta' || pagina === 'plato'; }
+      return location.pathname === ruta;
     }
     // En ordenador, las páginas van directamente en la cabecera
     var navEscritorio = h('nav', { class: 'nav-escritorio', 'aria-label': 'Menú' }, rutas.map(function (par) {
@@ -638,7 +655,8 @@
 
   cargarPlatos().then(function (d) {
     aplicarLogo(d);
-    if (pagina === 'carta') { renderCarta(d); }
+    if (pagina === 'inicio') { renderInicio(d); }
+    else if (pagina === 'carta') { renderCarta(d); }
     else if (pagina === 'plato') { renderPlato(d); }
     else if (pagina === 'panel') { entrarPanel(d); }
     else if (pagina === 'contacto') { renderContacto(); }

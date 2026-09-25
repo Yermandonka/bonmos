@@ -4,3 +4,4 @@ php-version/uploads/*
 !php-version/uploads/.htaccess
 nohup.out
 .vercel
+.env*
