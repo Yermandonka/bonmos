@@ -7,7 +7,7 @@ const BM_UPLOADS  = __DIR__ . '/../uploads';
 
 // Contacto para reservas (cambiar por los datos reales del chef)
 const BM_WHATSAPP = '34604053509';
-const BM_EMAIL    = 'hola@bonmos.es';
+const BM_EMAIL    = 'bonmosvlc@gmail.com';
 
 const BM_CATEGORIAS = [
     'arroces'   => 'Arroces',
