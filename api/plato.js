@@ -62,9 +62,9 @@ export default async function handler(req, res) {
       <em>Cuina de xef, a casa teua</em>
     </span>
   </a>
-  <nav class="nav">
-    <a href="/">La carta</a>
-  </nav>
+  <button class="hamburguesa" type="button" aria-label="Abrir menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 <main class="contenido" id="app">
   <p class="vacio">Emplatando…</p>
