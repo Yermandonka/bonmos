@@ -1,30 +1,28 @@
 # Bon Mos
 
-Web-escaparate de chef privado a domicilio, con estética valenciana. La carta de platos se gestiona desde un panel sin complicaciones y las reservas llegan por WhatsApp.
+Web-escaparate de chef privado a domicilio, con estética valenciana. La carta se gestiona desde un panel sin complicaciones y las reservas llegan por WhatsApp.
 
-## Cómo funciona
+Pensada para **Vercel**: frontend estático + funciones serverless en `/api`, base de datos **Neon Postgres** y fotos en **Vercel Blob**.
 
-- **PHP 8 + SQLite** — sin MySQL ni configuración: la base de datos (`data/bonmos.sqlite`) se crea sola con 7 platos valencianos de ejemplo la primera vez que se abre la web.
-- **Panel del chef** (`admin.php`): publicar, editar y borrar platos, con subida de foto (JPG/PNG/WebP).
-- **Ficha comercial**: producto de mercado, cómo funciona el servicio y botones de reserva por WhatsApp y correo.
-- Previews estilo iOS (hoja deslizante con animación de la foto), adaptada primero a móvil.
+## Desplegar en Vercel
 
-## Puesta en marcha
+1. Importa este repo en Vercel (preset de framework: **Other**, sin comando de build).
+2. El primer deploy ya funciona en **modo demostración** (carta de ejemplo, solo lectura).
+3. Para publicar de verdad, en el proyecto de Vercel:
+   - **Storage → Create Database → Neon (Postgres)** y conéctala al proyecto (añade `DATABASE_URL` sola). La tabla se crea y se siembra automáticamente en la primera visita.
+   - **Storage → Blob** para las fotos que suba el chef (añade `BLOB_READ_WRITE_TOKEN` solo).
+   - Opcional pero recomendable: variable de entorno `PANEL_CLAVE` con una clave — el panel la pedirá una vez para poder publicar/borrar.
+4. Redepliega.
 
-Con el PHP de XAMPP/LAMPP (o cualquier PHP 8 con pdo_sqlite):
+## Configuración del negocio
 
-```bash
-php -S 0.0.0.0:8790
-```
+En `assets/js/config.js`: nombre, lema, categorías y — **importante** — el WhatsApp y el correo reales del chef (los que hay son de ejemplo).
 
-O servido por el Apache de LAMPP:
+## Estructura
 
-```bash
-sudo bash desplegar.sh
-```
+- `index.html` / `plato.html` / `panel.html` — carta, ficha comercial y panel del chef (render en cliente con `assets/js/bm.js`).
+- `api/platos.js` — CRUD de la carta (Neon Postgres; sin base de datos responde la carta demo).
+- `api/foto.js` — subida de fotos a Vercel Blob (JPG/PNG/WebP, máx. 4 MB).
+- `php-version/` — la versión original PHP + SQLite, para servidor propio (XAMPP/LAMPP): `sudo bash php-version/desplegar.sh`.
 
-## Configuración
-
-En `inc/config.php`: nombre, lema, categorías y — **importante** — `BM_WHATSAPP` y `BM_EMAIL`, que son de ejemplo y hay que cambiar por los datos reales del chef.
-
-Las fotos de los platos de ejemplo proceden de Wikimedia Commons; la atribución está en `assets/img/platos/CREDITOS.txt`.
+Las fotos de los platos de ejemplo proceden de Wikimedia Commons; atribución en `assets/img/platos/CREDITOS.txt`.

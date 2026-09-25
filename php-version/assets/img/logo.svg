@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bon Mos">
+  <defs>
+    <radialGradient id="naranja" cx="38%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#f6a24b"/>
+      <stop offset="45%" stop-color="#df7a1c"/>
+      <stop offset="100%" stop-color="#b0500e"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="252" fill="#f7ecdf"/>
+  <g fill="#241b12" font-family="Jost, Futura, 'Century Gothic', 'Avenir Next', sans-serif" font-weight="300">
+    <text x="256" y="238" font-size="152" text-anchor="middle" letter-spacing="2">Bon</text>
+    <text x="203" y="398" font-size="152" text-anchor="end">M</text>
+    <text x="317" y="398" font-size="152" text-anchor="start">s</text>
+  </g>
+  <!-- la "o" de Mos: naranja valenciana con su anillo a tinta -->
+  <circle cx="262" cy="349" r="52" fill="none" stroke="#241b12" stroke-width="7"/>
+  <ellipse cx="262" cy="351" rx="41" ry="44" fill="url(#naranja)"/>
+  <ellipse cx="247" cy="333" rx="12" ry="8" fill="#ffffff" opacity="0.75" transform="rotate(-28 247 333)"/>
+  <path d="M287 305 q8 -12 16 -14" fill="none" stroke="#241b12" stroke-width="6" stroke-linecap="round"/>
+</svg>

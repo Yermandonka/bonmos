@@ -58,24 +58,28 @@ a { color: var(--cobalto); text-decoration: none; }
 
 img { max-width: 100%; }
 
-/* ---------- Cabecera: píldora flotante de cristal ---------- */
+/* Filete superior: guiño discreto a la senyera */
+.senyera {
+  height: 3px;
+  background: linear-gradient(90deg, var(--oro) 0 25%, var(--naranja) 25% 50%, var(--oro) 50% 75%, var(--cobalto) 75%);
+  opacity: 0.55;
+}
+
+/* ---------- Cabecera ---------- */
 .cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.55rem 0.7rem 0.55rem 0.6rem;
-  width: min(1080px, calc(100% - 1.6rem));
-  margin: 0.8rem auto 0;
-  background: rgba(43, 33, 23, 0.72);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  backdrop-filter: blur(18px) saturate(1.5);
-  border: 1px solid rgba(247, 239, 221, 0.16);
-  border-radius: 999px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(51, 40, 29, 0.88);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 3px solid var(--naranja);
   position: sticky;
-  top: 0.7rem;
+  top: 0;
   z-index: 10;
-  box-shadow: 0 10px 30px rgba(32, 24, 18, 0.28), inset 0 1px 0 rgba(247, 239, 221, 0.12);
+  box-shadow: 0 4px 18px rgba(32, 24, 18, 0.3);
 }
 
 .marca {
@@ -130,16 +134,7 @@ img { max-width: 100%; }
 
 .nav a:hover { border-bottom-color: var(--naranja-vivo); color: #fff; }
 
-.nav a:last-child {
-  border: 1px solid rgba(247, 239, 221, 0.25);
-  border-radius: 999px;
-  padding: 0.35rem 0.95rem;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.nav a:last-child:hover { background: rgba(247, 239, 221, 0.12); border-color: rgba(247, 239, 221, 0.25); }
-
-.nav a:last-child:active { transform: scale(0.94); }
+.nav .nav-destino { color: var(--naranja-vivo); }
 
 /* ---------- Contenido ---------- */
 .contenido {
@@ -840,26 +835,20 @@ img { max-width: 100%; }
 
 .admin-item-botones .boton { padding: 0.45rem 0.95rem; font-size: 0.75rem; }
 
-/* ---------- Pie: tarjeta flotante de cristal ---------- */
+/* ---------- Pie ---------- */
 .pie {
-  background: rgba(43, 33, 23, 0.78);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  backdrop-filter: blur(18px) saturate(1.5);
+  background: var(--tinta-media);
   color: var(--crema-clara);
-  border: 1px solid rgba(247, 239, 221, 0.16);
-  border-radius: 26px;
-  overflow: hidden;
+  border-top: 3px solid var(--naranja);
   text-align: center;
-  padding: 1.6rem 1.2rem 1.8rem;
-  width: min(1080px, calc(100% - 1.6rem));
-  margin: auto auto 0.9rem;
-  box-shadow: 0 10px 30px rgba(32, 24, 18, 0.22), inset 0 1px 0 rgba(247, 239, 221, 0.12);
+  padding: 1.6rem 1rem 2rem;
+  margin-top: auto;
 }
 
 /* Cenefa de azulejos muy tenue, a punta de pluma */
 .pie-azulejos {
   height: 14px;
-  margin: -1.6rem -1.2rem 1.4rem;
+  margin: -1.6rem -1rem 1.4rem;
   opacity: 0.5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14' viewBox='0 0 28 14'%3E%3Cpath d='M0 14 L7 2 L14 14 M14 14 L21 2 L28 14' fill='none' stroke='%23f7efdd' stroke-width='1'/%3E%3Ccircle cx='7' cy='9' r='1.4' fill='%23d97a2a'/%3E%3Ccircle cx='21' cy='9' r='1.4' fill='%23d97a2a'/%3E%3C/svg%3E");
   background-repeat: repeat-x;

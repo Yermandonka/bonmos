@@ -1,0 +1,11 @@
+{
+  "name": "bon-mos",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web de chef privado a domicilio con estética valenciana — estática + serverless para Vercel",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "@vercel/blob": "^1.1.1"
+  }
+}

@@ -1,4 +1,6 @@
-data/*.sqlite*
-uploads/*
-!uploads/.htaccess
+node_modules/
+php-version/data/*.sqlite*
+php-version/uploads/*
+!php-version/uploads/.htaccess
 nohup.out
+.vercel

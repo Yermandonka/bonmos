@@ -1,7 +1,7 @@
 #!/bin/bash
 # Despliega Bon Mos en el Apache de LAMPP (ejecutar con sudo)
 set -e
-PROYECTO="/home/yermandonka/Projects/bon-mos"
+PROYECTO="/home/yermandonka/Projects/bon-mos/php-version"
 
 ln -sfn "$PROYECTO" /opt/lampp/htdocs/bonmos
 
