@@ -329,16 +329,56 @@
     return fetch(url, { method: metodo, headers: cab, body: cuerpo }).then(function (r) {
       return r.json().then(function (j) {
         if (r.status === 401) {
-          var c = prompt('Clave del chef:');
-          if (c !== null) {
-            localStorage.setItem('bm_clave', c);
-            return llamarApi(metodo, url, cuerpo, tipo);
-          }
+          localStorage.removeItem('bm_clave');
+          location.href = '/panel';
+          return new Promise(function () {});
         }
         if (!r.ok) { throw new Error(j.error || ('Error ' + r.status)); }
         return j;
       });
     });
+  }
+
+  // Puerta del panel: solo se entra con la clave del chef
+  function renderAcceso(d, mensaje) {
+    app.textContent = '';
+    var fClave = h('input', { type: 'password', required: '', autocomplete: 'current-password', 'aria-label': 'Clave del chef' });
+    var form = h('form', { class: 'formulario', onsubmit: function (ev) {
+      ev.preventDefault();
+      var boton = form.querySelector('button');
+      boton.disabled = true;
+      fetch('/api/clave', { method: 'POST', headers: { 'x-clave': fClave.value } }).then(function (r) {
+        return r.json().then(function (j) {
+          if (r.ok) {
+            localStorage.setItem('bm_clave', fClave.value);
+            renderPanel(d);
+          } else {
+            renderAcceso(d, j.error || 'No ha podido ser.');
+          }
+        });
+      }).catch(function () { renderAcceso(d, 'No hay conexión con la cocina. Prueba de nuevo.'); });
+    } }, [
+      h('label', {}, [document.createTextNode('Clave'), fClave]),
+      h('button', { type: 'submit', class: 'boton', texto: 'Entrar a la cocina' }),
+    ]);
+    app.appendChild(h('section', { class: 'panel panel-acceso' }, [
+      h('h1', { texto: 'Acceso del chef' }),
+      h('p', { class: 'panel-nota', texto: 'Zona privada para cuidar la carta.' }),
+      mensaje ? h('p', { class: 'alerta', texto: mensaje }) : null,
+      form,
+    ]));
+    fClave.focus();
+  }
+
+  function entrarPanel(d) {
+    if (!clave()) { return renderAcceso(d); }
+    fetch('/api/clave', { method: 'POST', headers: { 'x-clave': clave() } }).then(function (r) {
+      if (r.ok) { renderPanel(d); }
+      else {
+        localStorage.removeItem('bm_clave');
+        r.json().then(function (j) { renderAcceso(d, r.status === 503 ? j.error : ''); });
+      }
+    }).catch(function () { renderAcceso(d, 'No hay conexión con la cocina.'); });
   }
 
   function renderPanel(d) {
@@ -469,9 +509,24 @@
   cargarPlatos().then(function (d) {
     if (pagina === 'carta') { renderCarta(d); }
     else if (pagina === 'plato') { renderPlato(d); }
-    else if (pagina === 'panel') { renderPanel(d); }
+    else if (pagina === 'panel') { entrarPanel(d); }
   }).catch(function (e) {
     app.textContent = '';
     app.appendChild(h('p', { class: 'vacio', texto: 'No se pudo cargar la carta (' + e.message + '). Recarga la página.' }));
   });
+
+  // Acceso discreto al panel: mantener pulsado el «Bon Mos» del pie (o doble clic)
+  var sello = document.querySelector('.pie p strong');
+  if (sello && pagina !== 'panel') {
+    var pulsacion = null;
+    sello.style.userSelect = 'none';
+    sello.style.webkitUserSelect = 'none';
+    sello.addEventListener('pointerdown', function () {
+      pulsacion = setTimeout(function () { location.href = '/panel'; }, 1200);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+      sello.addEventListener(ev, function () { clearTimeout(pulsacion); });
+    });
+    sello.addEventListener('dblclick', function () { location.href = '/panel'; });
+  }
 })();

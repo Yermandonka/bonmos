@@ -14,7 +14,7 @@ function slugificar(t) {
 
 function sinClave(req) {
   const clave = process.env.PANEL_CLAVE;
-  return clave && req.headers['x-clave'] !== clave;
+  return !clave || req.headers['x-clave'] !== clave;
 }
 
 let lista = null;
@@ -67,6 +67,9 @@ export default async function handler(req, res) {
     if (req.method === 'POST' || req.method === 'DELETE') {
       if (!URL_DB) {
         return res.status(503).json({ error: 'Sin base de datos: crea una base Neon en la pestaña Storage de tu proyecto en Vercel y redepliega.' });
+      }
+      if (!process.env.PANEL_CLAVE) {
+        return res.status(503).json({ error: 'El panel no tiene clave configurada: añade la variable PANEL_CLAVE en Vercel.' });
       }
       if (sinClave(req)) {
         return res.status(401).json({ error: 'Clave del chef incorrecta.' });

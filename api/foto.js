@@ -14,7 +14,10 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Sin almacén de fotos: crea un Blob store en la pestaña Storage de tu proyecto en Vercel y redepliega.' });
   }
   const clave = process.env.PANEL_CLAVE;
-  if (clave && req.headers['x-clave'] !== clave) {
+  if (!clave) {
+    return res.status(503).json({ error: 'El panel no tiene clave configurada: añade la variable PANEL_CLAVE en Vercel.' });
+  }
+  if (req.headers['x-clave'] !== clave) {
     return res.status(401).json({ error: 'Clave del chef incorrecta.' });
   }
   const ext = MIMES[req.headers['content-type']];

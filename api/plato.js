@@ -62,7 +62,6 @@ export default async function handler(req, res) {
   </a>
   <nav class="nav">
     <a href="/">La carta</a>
-    <a href="/panel">Panel</a>
   </nav>
 </header>
 <main class="contenido" id="app">

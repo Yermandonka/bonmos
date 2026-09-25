@@ -1024,6 +1024,45 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
   .vuelo { display: none; }
 }
 
+/* ---------- Móvil: afinado ---------- */
+@media (max-width: 640px) {
+  .cabecera {
+    padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+    gap: 0.6rem;
+    width: calc(100% - 1.2rem);
+    margin-top: 0.6rem;
+    top: 0.5rem;
+  }
+  .marca { gap: 0.55rem; }
+  .marca-logo { width: 42px; height: 42px; }
+  .marca-texto strong { font-size: 1.2rem; line-height: 1.1; }
+  .marca-texto em { font-size: 0.58rem; letter-spacing: 0.1em; }
+  .nav { gap: 0.5rem; }
+  .nav a { font-size: 0.78rem; }
+  .contenido { padding: 1rem 0.85rem 2.2rem; }
+  .hero-texto { padding: 1.1rem 1.1rem 1.3rem; }
+  .hero-texto h1 { font-size: 1.65rem; }
+  .hero-foto { height: 200px; }
+  .prosa { font-size: 1.12rem; }
+  .rejilla { gap: 0.9rem; }
+  .tarjeta-foto { height: 165px; }
+  .receta-cabecera h1 { font-size: 1.75rem; }
+  .receta-foto { height: 195px; }
+  .panel { padding: 1.15rem 1rem 1.3rem; }
+  .receta-datos strong { font-size: 1.15rem; }
+  .receta-datos span { font-size: 0.66rem; letter-spacing: 0.06em; }
+  .hoja { padding-left: 1rem; padding-right: 1rem; }
+  .hoja-foto { height: 165px; }
+  .hoja h2 { font-size: 1.5rem; }
+  .hoja-botones { gap: 0.5rem; }
+  .hoja-botones .boton { padding: 0.8rem 0.4rem; font-size: 0.76rem; letter-spacing: 0.08em; }
+  .hoja-cerrar { min-width: 46px; }
+  .boton { padding: 0.6rem 1.15rem; }
+  .admin-item-botones .boton { padding: 0.45rem 0.8rem; }
+  .pie { width: calc(100% - 1.2rem); padding: 1.3rem 1rem 1.5rem; }
+  .pie-azulejos { margin: -1.3rem -1rem 1.1rem; }
+}
+
 /* ---------- Tabletas y escritorio ---------- */
 @media (min-width: 640px) {
   .rejilla { grid-template-columns: repeat(2, 1fr); }
