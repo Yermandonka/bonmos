@@ -11,7 +11,7 @@ export const SEED = [
     consejo: 'La paella se cocina delante de vosotros y se lleva a la mesa en su hierro, con la ramita de romero coronando. El socarraet se reparte con justicia.',
     tiempo_min: 90,
     comensales: 4,
-    foto: '/assets/img/platos/paella.jpg',
+    foto: '/assets/img/platos/paella.webp',
     destacada: 1,
   },
   {
@@ -24,7 +24,7 @@ export const SEED = [
     consejo: 'El fideo se tuesta en seco antes de mojarlo: cambia por completo el sabor. Y el alioli se monta en tu cocina, delante de quien quiera mirar.',
     tiempo_min: 60,
     comensales: 4,
-    foto: '/assets/img/platos/fideua.jpg',
+    foto: '/assets/img/platos/fideua.webp',
     destacada: 1,
   },
   {
@@ -37,7 +37,7 @@ export const SEED = [
     consejo: 'Se prepara la víspera para que el aceite se impregne del asado y del bacalao. El mullaor —mojar pan hasta acabar el aceite— es obligatorio.',
     tiempo_min: 20,
     comensales: 6,
-    foto: '/assets/img/platos/esgarraet.jpg',
+    foto: '/assets/img/platos/esgarraet.webp',
     destacada: 0,
   },
   {
@@ -50,7 +50,7 @@ export const SEED = [
     consejo: 'Si la anguila impone, se borda igual con rape o con sepia. El caldo se liga moviendo la cazuela en vaivén, nunca con cuchara.',
     tiempo_min: 50,
     comensales: 4,
-    foto: '/assets/img/platos/allipebre.jpg',
+    foto: '/assets/img/platos/allipebre.webp',
     destacada: 0,
   },
   {
@@ -63,7 +63,7 @@ export const SEED = [
     consejo: 'Se hornea en tu propia cocina y la cazuela de barro va directa a la mesa, crepitando. La cabeza de ajos del centro se la queda quien más la defienda.',
     tiempo_min: 75,
     comensales: 4,
-    foto: '/assets/img/platos/arrosalforn.jpg',
+    foto: '/assets/img/platos/arrosalforn.webp',
     destacada: 0,
   },
   {
@@ -76,7 +76,7 @@ export const SEED = [
     consejo: 'Sale del horno templada, cortada en cuadrados dentro de la propia llanda. Con un vaso de mistela o de horchata, la merienda está resuelta.',
     tiempo_min: 50,
     comensales: 8,
-    foto: '/assets/img/platos/coca.jpg',
+    foto: '/assets/img/platos/coca.webp',
     destacada: 0,
   },
   {
@@ -89,7 +89,7 @@ export const SEED = [
     consejo: 'Se sirve casi al hielo, recién colada, sin conservantes: es un producto vivo que se hace el mismo día. A sucar sin vergüenza.',
     tiempo_min: 30,
     comensales: 4,
-    foto: '/assets/img/platos/horchata.jpg',
+    foto: '/assets/img/platos/horchata.webp',
     destacada: 1,
   },
 ];

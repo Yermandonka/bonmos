@@ -173,6 +173,7 @@
     var t = h('a', { class: 'tarjeta', href: '/plato/' + p.slug }, [
       h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "')" }),
       h('div', { class: 'tarjeta-cuerpo' }, [
+        p.destacada ? h('span', { class: 'tarjeta-especialidad', texto: 'Especialidad de la casa' }) : null,
         h('span', { class: 'tarjeta-meta', texto: catNombre(p.categoria) + ' · ' + p.tiempo_min + ' min' }),
         h('h2', { texto: p.titulo }),
         h('p', { texto: p.descripcion.length > 150 ? p.descripcion.slice(0, 147) + '…' : p.descripcion }),
@@ -196,7 +197,7 @@
       var heroTarjeta = h('a', { class: 'hero-tarjeta', href: '/plato/' + destacada.slug }, [
         h('div', { class: 'hero-foto', estilo: "background-image:url('" + destacada.foto + "')" }),
         h('div', { class: 'hero-texto' }, [
-          h('span', { class: 'sobre-titulo', texto: 'Plato de la casa' }),
+          h('span', { class: 'sobre-titulo', texto: 'Especialidad de la casa' }),
           h('h1', { texto: destacada.titulo }),
           h('p', { class: 'prosa', texto: destacada.descripcion }),
           h('span', { class: 'hero-cta', texto: 'Ver el plato' }),
@@ -347,7 +348,7 @@
 
   // ---------- Panel del chef ----------
 
-  function clave() { return localStorage.getItem('bm_clave') || ''; }
+  function clave() { return sessionStorage.getItem('bm_clave') || ''; }
 
   function llamarApi(metodo, url, cuerpo, tipo) {
     var cab = { 'x-clave': clave() };
@@ -355,7 +356,7 @@
     return fetch(url, { method: metodo, headers: cab, body: cuerpo }).then(function (r) {
       return r.json().then(function (j) {
         if (r.status === 401) {
-          localStorage.removeItem('bm_clave');
+          sessionStorage.removeItem('bm_clave');
           location.href = '/panel';
           return new Promise(function () {});
         }
@@ -376,7 +377,7 @@
       fetch('/api/clave', { method: 'POST', headers: { 'x-clave': fClave.value } }).then(function (r) {
         return r.json().then(function (j) {
           if (r.ok) {
-            localStorage.setItem('bm_clave', fClave.value);
+            sessionStorage.setItem('bm_clave', fClave.value);
             renderPanel(d);
           } else {
             renderAcceso(d, j.error || 'No ha podido ser.');
@@ -401,7 +402,7 @@
     fetch('/api/clave', { method: 'POST', headers: { 'x-clave': clave() } }).then(function (r) {
       if (r.ok) { renderPanel(d); }
       else {
-        localStorage.removeItem('bm_clave');
+        sessionStorage.removeItem('bm_clave');
         r.json().then(function (j) { renderAcceso(d, r.status === 503 ? j.error : ''); });
       }
     }).catch(function () { renderAcceso(d, 'No hay conexión con la cocina.'); });
@@ -476,16 +477,17 @@
       listaEl.appendChild(h('li', {}, [
         h('div', { class: 'admin-item-info' }, [
           h('strong', { texto: p.titulo }),
-          h('span', { texto: catNombre(p.categoria) + (p.destacada ? ' · ★ plato de la casa' : '') }),
+          h('span', { texto: catNombre(p.categoria) + (p.destacada ? ' · ★ especialidad de la casa' : '') }),
         ]),
         h('div', { class: 'admin-item-botones' }, [
           h('a', { class: 'boton boton-suave', href: '/plato/' + p.slug, texto: 'Ver' }),
           h('a', { class: 'boton boton-suave', href: '#', texto: 'Editar', onclick: function (ev) { ev.preventDefault(); abreFormulario(p); } }),
           h('button', { type: 'button', class: 'boton boton-peligro', texto: 'Borrar', onclick: function () {
             if (!confirm('¿Borrar «' + p.titulo + '» de la carta?')) { return; }
-            llamarApi('DELETE', '/api/platos?id=' + p.id).then(function () {
-              cachePlatos = null;
-              cargarPlatos().then(renderPanel);
+            llamarApi('DELETE', '/api/platos?id=' + p.id).then(function (j) {
+              cachePlatos = { platos: j.platos || [], demo: false, ajustes: j.ajustes || (cachePlatos && cachePlatos.ajustes) || {} };
+              renderPanel(cachePlatos);
+              avisa('Plato borrado de la carta.');
             }).catch(function (e) { avisa(e.message, true); });
           } }),
         ]),
@@ -537,11 +539,13 @@
             ingredientes: fIng.value, consejo: fConsejo.value, notas: fNotas.value,
             tiempo_min: fTiempo.value, comensales: fComensales.value, foto: urlFoto, destacada: fDestacada.checked,
           }), 'application/json');
-        }).then(function () {
+        }).then(function (j) {
           var r = boton.getBoundingClientRect();
           confeti(r.left + r.width / 2, r.top);
-          cachePlatos = null;
-          cargarPlatos().then(function (nd) { renderPanel(nd); avisa('Plato guardado. Bon profit!'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+          cachePlatos = { platos: j.platos || [], demo: false, ajustes: j.ajustes || (cachePlatos && cachePlatos.ajustes) || {} };
+          renderPanel(cachePlatos);
+          avisa('Plato guardado. Bon profit!');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }).catch(function (e) {
           boton.disabled = false;
           avisa(e.message, true);
@@ -554,7 +558,7 @@
         campo('Producto de mercado', fIng, 'uno por línea'),
         campo('El toque del chef', fConsejo, 'se muestra en la ficha'),
         campo('Elaboración', fNotas, 'notas internas, no se publican'),
-        h('label', { class: 'casilla' }, [fDestacada, document.createTextNode(' Plato de la casa (destacado en portada)')]),
+        h('label', { class: 'casilla' }, [fDestacada, document.createTextNode(' Especialidad de la casa (destacada en portada)')]),
         h('div', { class: 'botonera' }, [
           h('button', { type: 'submit', class: 'boton', texto: 'Guardar plato' }),
           h('a', { class: 'boton boton-suave', href: '#', texto: 'Cancelar', onclick: function (ev) { ev.preventDefault(); form.parentElement.remove(); } }),

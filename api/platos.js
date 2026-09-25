@@ -1,8 +1,10 @@
 // La carta vive como un JSON en Vercel Blob — sin base de datos externa.
-import { put, list } from '@vercel/blob';
+// Cada guardado escribe un archivo con marca de tiempo (URL nueva) porque el
+// CDN del Blob sirve hasta 60 s la versión vieja si se sobrescribe la misma ruta.
+import { put, list, del } from '@vercel/blob';
 import { SEED } from './_seed.js';
 
-const RUTA = 'datos/carta.json';
+const PREFIJO = 'datos/carta';
 const HAY_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 
 function slugificar(t) {
@@ -20,21 +22,36 @@ function conClave(req) {
 }
 
 async function leerCrudo() {
-  const { blobs } = await list({ prefix: RUTA, limit: 1 });
+  const { blobs } = await list({ prefix: PREFIJO, limit: 100 });
   if (!blobs.length) { return null; }
-  // Cache-buster: el CDN de Blob cachea por URL completa
-  const r = await fetch(blobs[0].url + '?v=' + Date.now());
+  // La versión más reciente: los nombres llevan Date.now(), ordenan solos
+  blobs.sort(function (a, b) { return a.pathname < b.pathname ? 1 : -1; });
+  const r = await fetch(blobs[0].url);
   if (!r.ok) { return null; }
   return r.json();
 }
 
 export async function guardarCrudo(datos) {
-  await put(RUTA, JSON.stringify(datos), {
+  await put(PREFIJO + '-' + Date.now() + '.json', JSON.stringify(datos), {
     access: 'public',
     addRandomSuffix: false,
-    allowOverwrite: true,
     contentType: 'application/json',
     cacheControlMaxAge: 60,
+  });
+  // Limpieza de versiones antiguas (nos quedamos con las 3 últimas)
+  try {
+    const { blobs } = await list({ prefix: PREFIJO, limit: 100 });
+    blobs.sort(function (a, b) { return a.pathname < b.pathname ? 1 : -1; });
+    const viejas = blobs.slice(3).map(function (b) { return b.url; });
+    if (viejas.length) { await del(viejas); }
+  } catch (err) {
+    console.error('limpieza de versiones:', err.message);
+  }
+}
+
+function ordenar(platos) {
+  return platos.slice().sort(function (a, b) {
+    return (b.destacada - a.destacada) || String(b.creada_en || '').localeCompare(String(a.creada_en || ''));
   });
 }
 
@@ -54,10 +71,7 @@ export async function leerPlatos() {
     return { platos: SEED, demo: true, ajustes: {} };
   }
   const d = await leerDatos();
-  const platos = d.platos.slice().sort(function (a, b) {
-    return (b.destacada - a.destacada) || String(b.creada_en || '').localeCompare(String(a.creada_en || ''));
-  });
-  return { platos, demo: false, ajustes: d.ajustes };
+  return { platos: ordenar(d.platos), demo: false, ajustes: d.ajustes };
 }
 
 export function errorConfiguracion(req, res) {
@@ -91,7 +105,7 @@ export default async function handler(req, res) {
         if (!id) { return res.status(400).json({ error: 'Falta el id.' }); }
         d.platos = d.platos.filter(function (p) { return p.id !== id; });
         await guardarCrudo(d);
-        return res.status(200).json({ ok: true });
+        return res.status(200).json({ ok: true, platos: ordenar(d.platos), ajustes: d.ajustes });
       }
 
       const b = req.body || {};
@@ -130,7 +144,7 @@ export default async function handler(req, res) {
         d.siguienteId += 1;
       }
       await guardarCrudo(d);
-      return res.status(200).json({ ok: true, slug });
+      return res.status(200).json({ ok: true, slug, platos: ordenar(d.platos), ajustes: d.ajustes });
     }
 
     res.setHeader('Allow', 'GET, POST, DELETE');

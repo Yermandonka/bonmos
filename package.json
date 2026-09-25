@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Web de chef privado a domicilio con estética valenciana — estática + serverless para Vercel",
   "dependencies": {
-    "@vercel/blob": "^1.1.1"
+    "@vercel/blob": "^1.1.1",
+    "sharp": "^0.35.4"
   }
 }
