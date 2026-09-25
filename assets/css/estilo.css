@@ -70,7 +70,7 @@ img { max-width: 100%; }
   /* Marrón sólido con tres trazos blancos artísticos: curvas en ángulos
      distintos, finas, discontinuas y levemente difuminadas */
   background-color: #4e3a28;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 70' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='p' x='-5%25' y='-60%25' width='110%25' height='220%25'%3E%3CfeGaussianBlur stdDeviation='0.7'/%3E%3C/filter%3E%3C/defs%3E%3Cg fill='none' stroke='%23fdf8ee' filter='url(%23p)'%3E%3Cpath d='M-10 16 C 220 4, 480 34, 910 10' stroke-width='0.8' stroke-opacity='0.4' stroke-dasharray='16 11'/%3E%3Cpath d='M-10 40 C 260 56, 560 22, 910 50' stroke-width='0.7' stroke-opacity='0.34' stroke-dasharray='11 15'/%3E%3Cpath d='M-10 62 C 300 46, 620 70, 910 28' stroke-width='0.8' stroke-opacity='0.38' stroke-dasharray='20 13'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 70' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='p' x='-20%25' y='-60%25' width='140%25' height='220%25'%3E%3CfeGaussianBlur stdDeviation='0.7'/%3E%3C/filter%3E%3C/defs%3E%3Cg fill='none' stroke='%23fdf8ee' filter='url(%23p)'%3E%3Cpath d='M 680 -8 C 590 18, 470 40, 310 82' stroke-width='0.8' stroke-opacity='0.42' stroke-dasharray='14 9'/%3E%3Cpath d='M -8 60 C 130 44, 320 20, 500 10 C 540 8, 560 10, 575 14' stroke-width='0.65' stroke-opacity='0.34' stroke-dasharray='10 16'/%3E%3Cpath d='M 230 80 C 380 58, 520 50, 660 38 C 780 28, 850 22, 912 24' stroke-width='0.75' stroke-opacity='0.38' stroke-dasharray='21 12'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.18);
