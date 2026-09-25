@@ -33,7 +33,9 @@ html {
 body {
   font-family: 'Jost', 'Century Gothic', sans-serif;
   font-weight: 400;
-  background: var(--crema);
+  /* transparente: el crema lo pone el html y las manchas van en body::before;
+     un fondo propio aquí taparía la capa fija de formas */
+  background: transparent;
   color: var(--tinta);
   line-height: 1.65;
   min-height: 100vh;
@@ -508,14 +510,21 @@ img { max-width: 100%; }
 .tarjeta-cuerpo { padding: 1.05rem 1.2rem 1.2rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
 
 .tarjeta-especialidad {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--oro);
+  white-space: nowrap;
 }
 
 .tarjeta-especialidad::before { content: '★ '; }
+
+/* Las especialidades, un poquito realzadas en las rejillas */
+.tarjeta-destacada {
+  border: 1.5px solid rgba(165, 129, 60, 0.55);
+  box-shadow: 0 3px 18px rgba(165, 129, 60, 0.22);
+}
 
 .tarjeta-meta {
   font-size: 0.78rem;

@@ -170,7 +170,7 @@
   // ---------- La carta ----------
 
   function tarjeta(p) {
-    var t = h('a', { class: 'tarjeta', href: '/plato/' + p.slug }, [
+    var t = h('a', { class: 'tarjeta' + (p.destacada ? ' tarjeta-destacada' : ''), href: '/plato/' + p.slug }, [
       h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "')" }),
       h('div', { class: 'tarjeta-cuerpo' }, [
         p.destacada ? h('span', { class: 'tarjeta-especialidad', texto: 'Especialidad de la casa' }) : null,
