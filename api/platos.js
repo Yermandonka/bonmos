@@ -110,10 +110,10 @@ export default async function handler(req, res) {
 
       const b = req.body || {};
       const titulo = (b.titulo || '').trim();
-      const ingredientes = (b.ingredientes || '').trim();
-      if (!titulo || !ingredientes) {
-        return res.status(400).json({ error: 'Título e ingredientes son obligatorios.' });
+      if (!titulo) {
+        return res.status(400).json({ error: 'El título es obligatorio.' });
       }
+      const ingredientes = (b.ingredientes || '').trim();
       const id = parseInt(b.id, 10) || 0;
       let slug = slugificar(titulo);
       if (d.platos.some(function (p) { return p.slug === slug && p.id !== id; })) {

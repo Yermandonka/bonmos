@@ -231,7 +231,7 @@
       var lista = platos.filter(function (p) {
         if (cat && p.categoria !== cat) { return false; }
         if (busca) {
-          var t = (p.titulo + ' ' + p.descripcion + ' ' + p.ingredientes).toLowerCase();
+          var t = (p.titulo + ' ' + p.descripcion + ' ' + (p.ingredientes || '')).toLowerCase();
           return t.indexOf(busca.toLowerCase()) !== -1;
         }
         return true;
@@ -293,11 +293,6 @@
     document.title = p.titulo + ' · ' + (CFG.nombre || 'Bon Mos');
     var enlaceWa = wa(p.titulo);
 
-    var mercado = h('ul', { class: 'lista-ingredientes lista-mercado' });
-    p.ingredientes.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).forEach(function (ing) {
-      mercado.appendChild(h('li', {}, [h('span', { texto: ing })]));
-    });
-
     var pasosServicio = [
       ['Eliges el menú.', ' Este plato solo, o combinado con entrantes y dulce de la carta.'],
       ['El chef hace la compra.', ' Producto fresco del día, elegido pieza a pieza.'],
@@ -322,24 +317,13 @@
           h('a', { class: 'boton boton-sorpresa', href: enlaceWa, target: '_blank', rel: 'noopener', texto: 'Reservar este plato' }),
         ]),
       ]),
-      h('div', { class: 'receta-columnas' }, [
-        h('section', { class: 'panel panel-ingredientes' }, [
-          h('h2', { texto: 'Producto de mercado' }),
-          h('p', { class: 'panel-nota', texto: 'Todo se compra el mismo día, de proximidad siempre que la lonja y la huerta lo permiten.' }),
-          mercado,
-        ]),
-        h('section', { class: 'panel panel-pasos' }, [
-          h('h2', { texto: 'Así funciona' }),
-          servicio,
-          p.consejo ? h('aside', { class: 'consejo' }, [
-            h('strong', { texto: 'El toque del chef' }),
-            h('p', { texto: p.consejo }),
-          ]) : null,
-          h('div', { class: 'reserva-panel' }, [
-            h('p', { class: 'prosa', texto: '¿Te lo imaginas ya en tu mesa?' }),
-            h('a', { class: 'boton boton-sorpresa', href: enlaceWa, target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
-            h('a', { class: 'boton boton-suave', href: 'mailto:' + CFG.email + '?subject=' + encodeURIComponent('Reserva: ' + p.titulo), texto: 'O por correo' }),
-          ]),
+      h('section', { class: 'panel panel-pasos panel-servicio' }, [
+        h('h2', { texto: 'Así funciona' }),
+        servicio,
+        h('div', { class: 'reserva-panel' }, [
+          h('p', { class: 'prosa', texto: '¿Te lo imaginas ya en tu mesa?' }),
+          h('a', { class: 'boton boton-sorpresa', href: enlaceWa, target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
+          h('a', { class: 'boton boton-suave', href: 'mailto:' + CFG.email + '?subject=' + encodeURIComponent('Reserva: ' + p.titulo), texto: 'O por correo' }),
         ]),
       ]),
       h('p', { class: 'volver' }, [h('a', { href: '/carta', texto: 'Volver a la carta' })]),
@@ -517,9 +501,6 @@
       var fTiempo = h('input', { type: 'number', min: '1', value: p.tiempo_min, inputmode: 'numeric' });
       var fComensales = h('input', { type: 'number', min: '1', value: p.comensales, inputmode: 'numeric' });
       var fDesc = h('textarea', { rows: '3', placeholder: 'Dos o tres frases que abran el apetito…', texto: p.descripcion });
-      var fIng = h('textarea', { rows: '7', required: '', placeholder: 'Arroz redondo de la Albufera\nPollo y conejo de corral\n…', texto: p.ingredientes });
-      var fConsejo = h('textarea', { rows: '2', placeholder: 'Ese detalle del servicio que marca la diferencia…', texto: p.consejo });
-      var fNotas = h('textarea', { rows: '4', placeholder: 'Apuntes de preparación, solo para ti…', texto: p.notas || '' });
       var fFoto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
       var fDestacada = h('input', { type: 'checkbox' });
       if (p.destacada) { fDestacada.checked = true; }
@@ -536,7 +517,6 @@
         listo.then(function (urlFoto) {
           return llamarApi('POST', '/api/platos', JSON.stringify({
             id: p.id, titulo: fTitulo.value, categoria: fCategoria.value, descripcion: fDesc.value,
-            ingredientes: fIng.value, consejo: fConsejo.value, notas: fNotas.value,
             tiempo_min: fTiempo.value, comensales: fComensales.value, foto: urlFoto, destacada: fDestacada.checked,
           }), 'application/json');
         }).then(function (j) {
@@ -555,9 +535,6 @@
         h('div', { class: 'fila-doble' }, [campo('Categoría', fCategoria), campo('Minutos en tu cocina', fTiempo)]),
         h('div', { class: 'fila-doble' }, [campo('Comensales mínimos', fComensales), campo('Foto del plato', fFoto, 'JPG, PNG o WebP')]),
         campo('Descripción apetitosa', fDesc),
-        campo('Producto de mercado', fIng, 'uno por línea'),
-        campo('El toque del chef', fConsejo, 'se muestra en la ficha'),
-        campo('Elaboración', fNotas, 'notas internas, no se publican'),
         h('label', { class: 'casilla' }, [fDestacada, document.createTextNode(' Especialidad de la casa (destacada en portada)')]),
         h('div', { class: 'botonera' }, [
           h('button', { type: 'submit', class: 'boton', texto: 'Guardar plato' }),
