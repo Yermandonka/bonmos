@@ -21,7 +21,14 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-size: 106.25%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-size: 106.25%;
+  /* red de seguridad: que nunca asome blanco tras el fondo fijo (rebote de scroll en iOS) */
+  background-color: #e9dcc3;
+  min-height: 100%;
+}
 
 body {
   font-family: 'Jost', 'Century Gothic', sans-serif;
