@@ -1024,8 +1024,9 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
   .vuelo { display: none; }
 }
 
-/* ---------- Móvil: afinado ---------- */
+/* ---------- Móvil: afinado, con letra generosa ---------- */
 @media (max-width: 640px) {
+  html { font-size: 112.5%; }
   .cabecera {
     padding: 0.4rem 0.6rem 0.4rem 0.5rem;
     gap: 0.6rem;
@@ -1034,32 +1035,50 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
     top: 0.5rem;
   }
   .marca { gap: 0.55rem; }
-  .marca-logo { width: 42px; height: 42px; }
-  .marca-texto strong { font-size: 1.2rem; line-height: 1.1; }
-  .marca-texto em { font-size: 0.58rem; letter-spacing: 0.1em; }
+  .marca-logo { width: 44px; height: 44px; }
+  .marca-texto strong { font-size: 1.3rem; line-height: 1.1; }
+  .marca-texto em { font-size: 0.6rem; letter-spacing: 0.1em; }
   .nav { gap: 0.5rem; }
-  .nav a { font-size: 0.78rem; }
+  .nav a { font-size: 0.84rem; }
   .contenido { padding: 1rem 0.85rem 2.2rem; }
-  .hero-texto { padding: 1.1rem 1.1rem 1.3rem; }
-  .hero-texto h1 { font-size: 1.65rem; }
-  .hero-foto { height: 200px; }
-  .prosa { font-size: 1.12rem; }
-  .rejilla { gap: 0.9rem; }
-  .tarjeta-foto { height: 165px; }
-  .receta-cabecera h1 { font-size: 1.75rem; }
-  .receta-foto { height: 195px; }
-  .panel { padding: 1.15rem 1rem 1.3rem; }
-  .receta-datos strong { font-size: 1.15rem; }
-  .receta-datos span { font-size: 0.66rem; letter-spacing: 0.06em; }
+  body { line-height: 1.7; }
+  .hero-texto { padding: 1.15rem 1.15rem 1.35rem; }
+  .hero-texto h1 { font-size: 1.9rem; }
+  .hero-foto { height: 210px; }
+  .prosa { font-size: 1.22rem; }
+  .rejilla { gap: 0.95rem; }
+  .tarjeta-foto { height: 170px; }
+  .tarjeta-cuerpo h2 { font-size: 1.5rem; }
+  .tarjeta-cuerpo p { font-size: 1rem; }
+  .tarjeta-meta { font-size: 0.82rem; }
+  .tarjeta-pie { font-size: 0.9rem; }
+  .tarjeta-ver { font-size: 0.82rem; }
+  .filtro { font-size: 0.86rem; padding: 0.45rem 1.05rem; }
+  .buscador input { font-size: 1rem; }
+  .receta-cabecera h1 { font-size: 1.95rem; }
+  .receta-foto { height: 200px; }
+  .receta-descripcion { font-size: 1.18rem; }
+  .panel { padding: 1.15rem 1rem 1.35rem; }
+  .panel h2 { font-size: 1.5rem; }
+  .lista-mercado li span, .lista-pasos li { font-size: 1.02rem; }
+  .receta-datos strong { font-size: 1.25rem; }
+  .receta-datos span { font-size: 0.7rem; letter-spacing: 0.06em; }
   .hoja { padding-left: 1rem; padding-right: 1rem; }
-  .hoja-foto { height: 165px; }
-  .hoja h2 { font-size: 1.5rem; }
+  .hoja-foto { height: 170px; }
+  .hoja h2 { font-size: 1.7rem; }
+  .hoja-desc { font-size: 1.18rem; }
+  .hoja-meta { font-size: 0.82rem; }
+  .hoja-datos { font-size: 0.92rem; }
   .hoja-botones { gap: 0.5rem; }
-  .hoja-botones .boton { padding: 0.8rem 0.4rem; font-size: 0.76rem; letter-spacing: 0.08em; }
-  .hoja-cerrar { min-width: 46px; }
-  .boton { padding: 0.6rem 1.15rem; }
-  .admin-item-botones .boton { padding: 0.45rem 0.8rem; }
+  .hoja-botones .boton { padding: 0.85rem 0.4rem; font-size: 0.8rem; letter-spacing: 0.07em; }
+  .hoja-cerrar { min-width: 48px; }
+  .boton { padding: 0.65rem 1.2rem; font-size: 0.88rem; }
+  .admin-item-botones .boton { padding: 0.5rem 0.85rem; }
+  .consejo p { font-size: 1rem; }
+  .panel-nota { font-size: 0.95rem; }
   .pie { width: calc(100% - 1.2rem); padding: 1.3rem 1rem 1.5rem; }
+  .pie p { font-size: 1.1rem; }
+  .pie-nota { font-size: 0.8rem !important; }
   .pie-azulejos { margin: -1.3rem -1rem 1.1rem; }
 }
 
