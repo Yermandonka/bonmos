@@ -12,9 +12,11 @@ function esc(s) {
 export default async function handler(req, res) {
   const slug = new URL(req.url, 'http://x').searchParams.get('slug') || '';
   let p = null;
+  let logo = '/assets/img/logo.png';
   try {
     const d = await leerPlatos();
     p = d.platos.find(function (x) { return x.slug === slug; }) || null;
+    if (d.ajustes && d.ajustes.logo) { logo = d.ajustes.logo; }
   } catch (err) {
     console.error(err);
   }
@@ -43,7 +45,7 @@ export default async function handler(req, res) {
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2b2117">
-<link rel="icon" type="image/png" href="/assets/img/logo.png">
+<link rel="icon" type="image/png" href="${esc(logo)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
@@ -54,7 +56,7 @@ export default async function handler(req, res) {
 <body data-pagina="plato">
 <header class="cabecera">
   <a class="marca" href="/">
-    <img src="/assets/img/logo.png" alt="Logo de Bon Mos" class="marca-logo">
+    <img src="${esc(logo)}" alt="Logo de Bon Mos" class="marca-logo">
     <span class="marca-texto">
       <strong>Bon Mos</strong>
       <em>Cuina de xef, a casa teua</em>

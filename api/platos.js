@@ -19,7 +19,7 @@ function sinClave(req) {
 
 let lista = null;
 
-async function db() {
+export async function db() {
   const sql = neon(URL_DB);
   if (!lista) {
     await sql`CREATE TABLE IF NOT EXISTS platos (
@@ -37,6 +37,10 @@ async function db() {
       destacada INT NOT NULL DEFAULT 0,
       creada_en TIMESTAMPTZ NOT NULL DEFAULT now()
     )`;
+    await sql`CREATE TABLE IF NOT EXISTS ajustes (
+      clave TEXT PRIMARY KEY,
+      valor TEXT NOT NULL DEFAULT ''
+    )`;
     const [{ n }] = await sql`SELECT count(*)::int AS n FROM platos`;
     if (n === 0) {
       for (const p of SEED) {
@@ -51,11 +55,14 @@ async function db() {
 
 export async function leerPlatos() {
   if (!URL_DB) {
-    return { platos: SEED, demo: true };
+    return { platos: SEED, demo: true, ajustes: {} };
   }
   const sql = await db();
   const platos = await sql`SELECT * FROM platos ORDER BY destacada DESC, creada_en DESC`;
-  return { platos, demo: false };
+  const filas = await sql`SELECT clave, valor FROM ajustes`;
+  const ajustes = {};
+  for (const f of filas) { ajustes[f.clave] = f.valor; }
+  return { platos, demo: false, ajustes };
 }
 
 export default async function handler(req, res) {

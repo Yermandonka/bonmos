@@ -818,6 +818,36 @@ img { max-width: 100%; }
 
 .admin-acciones { display: flex; gap: 0.6rem; }
 
+.perfil-chef {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.1rem;
+  padding: 1rem 1.2rem;
+}
+
+.perfil-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: var(--sombra);
+  flex-shrink: 0;
+}
+
+.perfil-campos { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+
+.perfil-campos strong {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.25rem;
+}
+
+.perfil-subir { font-size: 0.95rem; display: flex; flex-direction: column; gap: 0.3rem; }
+
+.perfil-subir small { color: var(--texto-suave); }
+
+.perfil-restaurar { font-size: 0.85rem; color: var(--naranja-oscuro); text-decoration: underline; }
+
 .admin-lista { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
 
 .admin-lista li {

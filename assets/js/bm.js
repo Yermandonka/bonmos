@@ -27,6 +27,14 @@
       'Hola! Me gustaría reservar «' + titulo + '» de ' + (CFG.nombre || 'Bon Mos') + ' para mi casa. ¿Hablamos?');
   }
 
+  function aplicarLogo(d) {
+    var url = (d.ajustes && d.ajustes.logo) || '';
+    if (!url) { return; }
+    [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.src = url; });
+    var fav = document.querySelector('link[rel="icon"]');
+    if (fav) { fav.href = url; }
+  }
+
   var cachePlatos = null;
   function cargarPlatos() {
     if (cachePlatos) { return Promise.resolve(cachePlatos); }
@@ -405,6 +413,46 @@
     }
     seccion.appendChild(aviso);
 
+    // Perfil del cocinero: logo editable
+    var logoActual = (d.ajustes && d.ajustes.logo) || '/assets/img/logo.png';
+    var vistaLogo = h('img', { class: 'perfil-logo', src: logoActual, alt: 'Logo actual' });
+    var fLogo = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': 'Nuevo logo' });
+    function guardarLogo(url) {
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ logo: url }), 'application/json').then(function (j) {
+        cachePlatos = null;
+        var nuevo = j.logo || '/assets/img/logo.png';
+        vistaLogo.src = nuevo;
+        aplicarLogo({ ajustes: { logo: j.logo } });
+        if (!j.logo) {
+          [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.src = nuevo; });
+        }
+        avisa('Logo actualizado.');
+      }).catch(function (e) { avisa(e.message, true); });
+    }
+    fLogo.addEventListener('change', function () {
+      var archivo = fLogo.files[0];
+      if (!archivo) { return; }
+      llamarApi('POST', '/api/foto', archivo, archivo.type)
+        .then(function (j) { return guardarLogo(j.url); })
+        .catch(function (e) { avisa(e.message, true); })
+        .finally(function () { fLogo.value = ''; });
+    });
+    seccion.appendChild(h('section', { class: 'panel perfil-chef' }, [
+      vistaLogo,
+      h('div', { class: 'perfil-campos' }, [
+        h('strong', { texto: 'Perfil del cocinero' }),
+        h('label', { class: 'perfil-subir' }, [
+          document.createTextNode('Cambiar el logo '),
+          h('small', { texto: '(cuadrado, se muestra en círculo)' }),
+          fLogo,
+        ]),
+        (d.ajustes && d.ajustes.logo) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Restaurar el original', onclick: function (ev) {
+          ev.preventDefault();
+          guardarLogo('');
+        } }) : null,
+      ]),
+    ]));
+
     var listaEl = h('ul', { class: 'admin-lista' });
     platos.forEach(function (p) {
       listaEl.appendChild(h('li', {}, [
@@ -507,6 +555,7 @@
   // ---------- Arranque ----------
 
   cargarPlatos().then(function (d) {
+    aplicarLogo(d);
     if (pagina === 'carta') { renderCarta(d); }
     else if (pagina === 'plato') { renderPlato(d); }
     else if (pagina === 'panel') { entrarPanel(d); }
