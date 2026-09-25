@@ -21,12 +21,20 @@ function conClave(req) {
   return clave && req.headers['x-clave'] === clave;
 }
 
+// Solo versiones con marca de tiempo (carta-<ms>.json); el archivo legado
+// carta.json ordenaba por delante ('.' > '-') y colaba lecturas viejas.
+function versionadas(blobs) {
+  return blobs
+    .filter(function (b) { return /carta-\d+\.json$/.test(b.pathname); })
+    .sort(function (a, b) { return a.pathname < b.pathname ? 1 : -1; });
+}
+
 async function leerCrudo() {
   const { blobs } = await list({ prefix: PREFIJO, limit: 100 });
-  if (!blobs.length) { return null; }
-  // La versión más reciente: los nombres llevan Date.now(), ordenan solos
-  blobs.sort(function (a, b) { return a.pathname < b.pathname ? 1 : -1; });
-  const r = await fetch(blobs[0].url);
+  const versiones = versionadas(blobs);
+  const elegido = versiones[0] || blobs.find(function (b) { return b.pathname === 'datos/carta.json'; });
+  if (!elegido) { return null; }
+  const r = await fetch(elegido.url);
   if (!r.ok) { return null; }
   return r.json();
 }
@@ -38,11 +46,12 @@ export async function guardarCrudo(datos) {
     contentType: 'application/json',
     cacheControlMaxAge: 60,
   });
-  // Limpieza de versiones antiguas (nos quedamos con las 3 últimas)
+  // Limpieza: fuera versiones antiguas (quedan 3) y el carta.json legado
   try {
     const { blobs } = await list({ prefix: PREFIJO, limit: 100 });
-    blobs.sort(function (a, b) { return a.pathname < b.pathname ? 1 : -1; });
-    const viejas = blobs.slice(3).map(function (b) { return b.url; });
+    const viejas = versionadas(blobs).slice(3).map(function (b) { return b.url; });
+    const legado = blobs.find(function (b) { return b.pathname === 'datos/carta.json'; });
+    if (legado) { viejas.push(legado.url); }
     if (viejas.length) { await del(viejas); }
   } catch (err) {
     console.error('limpieza de versiones:', err.message);
