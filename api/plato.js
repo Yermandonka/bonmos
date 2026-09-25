@@ -49,9 +49,9 @@ export default async function handler(req, res) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/estilo.css">
-<script src="/assets/js/config.js"></script>
-<script src="/assets/js/bm.js" defer></script>
+<link rel="stylesheet" href="/assets/css/estilo.css?v=5">
+<script src="/assets/js/config.js?v=5"></script>
+<script src="/assets/js/bm.js?v=5" defer></script>
 </head>
 <body data-pagina="plato">
 <header class="cabecera">
