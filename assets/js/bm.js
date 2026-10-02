@@ -38,14 +38,10 @@
       items.map(function (ing) { return h('li', {}, [h('span', { texto: ing })]); }));
   }
 
-  // Enlaces de WhatsApp sin mensaje pre-escrito: al pulsar se abre la
+  // Enlace de WhatsApp sin mensaje pre-escrito: al pulsar se abre la
   // conversación con el chef, pero sin dejar nada redactado en la bandeja.
-  function waTexto() {
-    return 'https://wa.me/' + CFG.whatsapp;
-  }
-
   function wa() {
-    return waTexto();
+    return 'https://wa.me/' + CFG.whatsapp;
   }
 
   // Número de WhatsApp en bonito para mostrarlo (sin el prefijo de país)
@@ -240,7 +236,7 @@
     revelar([].slice.call(rejilla.children));
   }
 
-  // La carta: buscador y filtros arriba del todo, y todos los platos
+  // La carta: filtros de categoría arriba del todo, y las tarjetas de los platos
   function renderCarta(d) {
     var platos = d.platos;
     var cat = '';
@@ -300,7 +296,7 @@
       return;
     }
     document.title = p.titulo + ' · ' + (CFG.nombre || 'Bon Mos');
-    var enlaceWa = wa(p.titulo);
+    var enlaceWa = wa();
 
     var pasosServicio = [
       ['Eliges el menú.', ' Este plato solo, o combinado con entrantes y dulce de la carta.'],
@@ -496,7 +492,7 @@
     }
 
     function abreFormulario(p) {
-      p = p || { titulo: '', categoria: 'carnes', descripcion: '', ingredientes: '', consejo: '', notas: '', tiempo_min: 60, comensales: 4, foto: '', destacada: 0, id: 0 };
+      p = p || { titulo: '', categoria: 'carnes', descripcion: '', ingredientes: '', foto: '', destacada: 0, id: 0 };
       var viejo = app.querySelector('.panel-editar');
       if (viejo) { viejo.remove(); }
 

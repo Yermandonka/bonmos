@@ -21,7 +21,7 @@ En `assets/js/config.js`: nombre, lema, categorías y — **importante** — el 
 
 ## Estructura
 
-- `index.html` / `plato.html` / `panel.html` — carta, ficha comercial y panel del chef (render en cliente con `assets/js/bm.js`).
+- `index.html` (inicio), `carta.html`, `eventos.html`, `servicios.html`, `contacto.html`, `plato.html` y `panel.html` — todas las vistas se pintan en cliente con `assets/js/bm.js` según el atributo `data-pagina`.
 - El panel no aparece en la navegación: se entra por `/panel` o manteniendo pulsado el «Bon Mos» del pie de página (doble clic en escritorio). Siempre pide la clave.
 - `api/platos.js` — CRUD de la carta (JSON en Vercel Blob; sin Blob responde la carta demo).
 - `api/foto.js` — subida de fotos a Vercel Blob (JPG/PNG/WebP, máx. 4 MB).
