@@ -10,6 +10,12 @@ function posValida(v) {
   return /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(String(v || '').trim());
 }
 
+// Zoom de encuadre: número entre 1 y 4 (1 = sin zoom)
+function zoomLimpio(v) {
+  const z = parseFloat(v);
+  return (z >= 1 && z <= 4) ? Math.round(z * 100) / 100 : 1;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -31,6 +37,9 @@ export default async function handler(req, res) {
     if (b.logoPos !== undefined) {
       d.ajustes.logoPos = posValida(b.logoPos) ? String(b.logoPos).trim() : '50% 50%';
     }
+    if (b.logoZoom !== undefined) {
+      d.ajustes.logoZoom = zoomLimpio(b.logoZoom);
+    }
 
     // Portada del inicio (foto o vídeo)
     if (b.portada !== undefined) {
@@ -45,6 +54,9 @@ export default async function handler(req, res) {
     if (b.portadaPos !== undefined) {
       d.ajustes.portadaPos = posValida(b.portadaPos) ? String(b.portadaPos).trim() : '50% 50%';
     }
+    if (b.portadaZoom !== undefined) {
+      d.ajustes.portadaZoom = zoomLimpio(b.portadaZoom);
+    }
 
     // Foto de la página de contacto
     if (b.contacto !== undefined) {
@@ -57,17 +69,23 @@ export default async function handler(req, res) {
     if (b.contactoPos !== undefined) {
       d.ajustes.contactoPos = posValida(b.contactoPos) ? String(b.contactoPos).trim() : '50% 50%';
     }
+    if (b.contactoZoom !== undefined) {
+      d.ajustes.contactoZoom = zoomLimpio(b.contactoZoom);
+    }
 
     await guardarCrudo(d);
     return res.status(200).json({
       ok: true,
       logo: d.ajustes.logo || '',
       logoPos: d.ajustes.logoPos || '',
+      logoZoom: d.ajustes.logoZoom || 1,
       portada: d.ajustes.portada || '',
       portadaTipo: d.ajustes.portadaTipo || '',
       portadaPos: d.ajustes.portadaPos || '',
+      portadaZoom: d.ajustes.portadaZoom || 1,
       contacto: d.ajustes.contacto || '',
       contactoPos: d.ajustes.contactoPos || '',
+      contactoZoom: d.ajustes.contactoZoom || 1,
     });
   } catch (err) {
     console.error(err);

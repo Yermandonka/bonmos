@@ -39,6 +39,34 @@ async function leerCrudo() {
   return r.json();
 }
 
+// Borra del Blob las imágenes/vídeos subidos que ya no usa ninguna parte de la
+// web (platos borrados o fotos reemplazadas). Las imágenes por defecto viven en
+// /assets (no están en el Blob), así que nunca aparecen aquí: quedan a salvo.
+// Margen de 10 min: no tocamos subidas recientes que aún no se han guardado
+// (p. ej. una foto de plato subida pero con el formulario sin enviar).
+async function limpiarImagenes(datos) {
+  try {
+    const refs = new Set();
+    (datos.platos || []).forEach(function (p) { if (p && p.foto) { refs.add(p.foto); } });
+    ['logo', 'portada', 'contacto'].forEach(function (k) {
+      if (datos.ajustes && datos.ajustes[k]) { refs.add(datos.ajustes[k]); }
+    });
+    const ahora = Date.now();
+    const MARGEN = 10 * 60 * 1000;
+    const huerfanas = [];
+    for (const pref of ['platos/', 'portada/']) {
+      const { blobs } = await list({ prefix: pref, limit: 1000 });
+      blobs.forEach(function (b) {
+        const edad = ahora - new Date(b.uploadedAt).getTime();
+        if (!refs.has(b.url) && edad > MARGEN) { huerfanas.push(b.url); }
+      });
+    }
+    if (huerfanas.length) { await del(huerfanas); }
+  } catch (err) {
+    console.error('limpieza de imágenes:', err.message);
+  }
+}
+
 export async function guardarCrudo(datos) {
   await put(PREFIJO + '-' + Date.now() + '.json', JSON.stringify(datos), {
     access: 'public',
@@ -56,6 +84,8 @@ export async function guardarCrudo(datos) {
   } catch (err) {
     console.error('limpieza de versiones:', err.message);
   }
+  // Y fuera las fotos/vídeos que ya no usa nadie
+  await limpiarImagenes(datos);
 }
 
 function ordenar(platos) {
@@ -130,6 +160,8 @@ export default async function handler(req, res) {
       }
       const fotoPos = /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(String(b.foto_pos || '').trim())
         ? String(b.foto_pos).trim() : '50% 50%';
+      const zoomNum = parseFloat(b.foto_zoom);
+      const fotoZoom = (zoomNum >= 1 && zoomNum <= 4) ? Math.round(zoomNum * 100) / 100 : 1;
       const plato = {
         id: id || d.siguienteId,
         titulo,
@@ -139,6 +171,7 @@ export default async function handler(req, res) {
         ingredientes,
         foto: (b.foto || '').trim(),
         foto_pos: fotoPos,
+        foto_zoom: fotoZoom,
       };
       if (id) {
         const i = d.platos.findIndex(function (p) { return p.id === id; });

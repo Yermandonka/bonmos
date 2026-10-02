@@ -54,13 +54,55 @@
   // Punto focal para encuadrar (background-position / object-position)
   function foco(obj, clave) { return (obj && obj[clave]) || '50% 50%'; }
 
+  // Zoom de encuadre guardado: un número entre 1 (sin zoom) y 4
+  function zoomDe(obj, clave) {
+    var z = parseFloat(obj && obj[clave]);
+    return (z >= 1 && z <= 4) ? z : 1;
+  }
+
+  // Capa interna que lleva la foto de fondo con su encuadre y su zoom. Va dentro
+  // de un contenedor con overflow:hidden (clase .tiene-fondo), de modo que el
+  // zoom (transform:scale) recorta sin romper el tamaño ni el hover del exterior.
+  function capaFondo(url, pos, zoom) {
+    return h('div', { class: 'zoomfoto', estilo:
+      "background-image:url('" + url + "');background-position:" + pos +
+      ";transform:scale(" + (zoom || 1) + ");transform-origin:" + pos });
+  }
+
+  // Caja de foto: contenedor exterior (con la clase que ya le da forma/tamaño en
+  // el CSS) + capa interna con la imagen encuadrada y con zoom.
+  function cajaFoto(clase, url, pos, zoom, attrs) {
+    var a = attrs || {};
+    a.class = clase + ' tiene-fondo';
+    return h('div', a, [capaFondo(url, pos, zoom)]);
+  }
+
+  // Envuelve un <img> redondo en una cajita con overflow:hidden para poder
+  // ampliarlo (transform:scale) sin que se salga del círculo.
+  function envuelveParaZoom(img, claseCaja) {
+    var p = img.parentNode;
+    if (p && p.classList && p.classList.contains(claseCaja)) { return p; }
+    var caja = h('span', { class: claseCaja });
+    p.insertBefore(caja, img);
+    caja.appendChild(img);
+    return caja;
+  }
+
+  function aplicarZoomImg(img, pos, zoom) {
+    img.style.objectPosition = pos;
+    img.style.transform = 'scale(' + (zoom || 1) + ')';
+    img.style.transformOrigin = pos;
+  }
+
   function aplicarLogo(d) {
     var aj = d.ajustes || {};
     var url = aj.logo || '';
     var lp = foco(aj, 'logoPos');
+    var lz = zoomDe(aj, 'logoZoom');
     [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) {
       if (url) { i.src = url; }
-      i.style.objectPosition = lp;
+      envuelveParaZoom(i, 'logo-caja');
+      aplicarZoomImg(i, lp, lz);
     });
     if (url) {
       var fav = document.querySelector('link[rel="icon"]');
@@ -129,7 +171,8 @@
     cerrarHoja();
     var href = '/plato/' + p.slug;
     fondo = h('div', { class: 'hoja-fondo', onclick: cerrarHoja });
-    var fotoHoja = h('div', { class: 'hoja-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') });
+    var fotoPosHoja = foco(p, 'foto_pos');
+    var fotoHoja = cajaFoto('hoja-foto', p.foto, fotoPosHoja, zoomDe(p, 'foto_zoom'));
     var ingr = ulIngredientes(p, 'hoja-ingredientes');
     hoja = h('div', { class: 'hoja', role: 'dialog', 'aria-label': p.titulo }, [
       h('div', { class: 'hoja-asa' }),
@@ -159,7 +202,8 @@
       hoja.style.transition = '';
 
       fotoHoja.style.visibility = 'hidden';
-      var clon = h('div', { class: 'vuelo', estilo: fotoHoja.style.cssText.replace('visibility: hidden;', '') +
+      var clon = h('div', { class: 'vuelo', estilo:
+        "background-image:url('" + p.foto + "');background-size:cover;background-position:" + fotoPosHoja + ";" +
         'left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height + 'px;border-radius:14px;' });
       document.body.appendChild(clon);
       clon.animate([
@@ -203,7 +247,7 @@
   // Tarjeta de la carta: solo foto y nombre. Al pulsar se abre la hoja con los ingredientes.
   function tarjeta(p) {
     var t = h('a', { class: 'tarjeta tarjeta-plato', href: '/plato/' + p.slug }, [
-      h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') }),
+      cajaFoto('tarjeta-foto', p.foto, foco(p, 'foto_pos'), zoomDe(p, 'foto_zoom')),
       h('div', { class: 'tarjeta-cuerpo' }, [
         h('h2', { texto: p.titulo }),
       ]),
@@ -232,15 +276,19 @@
     // Foto o vídeo de portada: lo que haya puesto el chef en su perfil, o la foto por defecto.
     var aj = d.ajustes || {};
     var portadaPos = aj.portada ? foco(aj, 'portadaPos') : '50% 18%';
+    var portadaZoom = aj.portada ? zoomDe(aj, 'portadaZoom') : 1;
     if (aj.portadaTipo === 'video' && aj.portada) {
       var vid = h('video', { class: 'portada-video', src: aj.portada, loop: '', playsinline: '', 'aria-hidden': 'true', preload: 'auto' });
       vid.muted = true; vid.autoplay = true; vid.setAttribute('muted', ''); vid.setAttribute('autoplay', '');
       vid.style.objectPosition = portadaPos;
+      vid.style.transform = 'scale(' + portadaZoom + ')';
+      vid.style.transformOrigin = portadaPos;
       portada.appendChild(vid);
       var intento = vid.play(); if (intento && intento.catch) { intento.catch(function () {}); }
     } else {
-      portada.style.backgroundImage = "url('" + (aj.portada || '/assets/img/chef.webp') + "')";
-      portada.style.backgroundPosition = portadaPos;
+      var fondoPortada = capaFondo(aj.portada || '/assets/img/chef.webp', portadaPos, portadaZoom);
+      fondoPortada.classList.add('portada-fondo');
+      portada.insertBefore(fondoPortada, portada.firstChild);
     }
     portada.appendChild(h('div', { class: 'portada-contenido' }, [
       h('span', { class: 'portada-eyebrow', texto: 'Chef privado a domicilio' }),
@@ -302,6 +350,17 @@
     ]);
     mas.appendChild(comoFunciona);
 
+    // Precio y qué incluye, justo debajo de "¿Cómo funciona?"
+    var precio = h('section', { class: 'precio-destacado' }, [
+      h('p', { class: 'precio-titular' }, [
+        document.createTextNode('¡Tú escoges las recetas y nosotros las cocinamos en tu casa con tus ingredientes '),
+        h('strong', { texto: 'desde 140€' }),
+        document.createTextNode('!'),
+      ]),
+      h('p', { class: 'precio-detalle', texto: 'En este precio se incluye el Servicio personalizable + preparación de tuppers y organización de la cocina (es posible que haya un extra por distancia lejana y aportación de tuppers por nuestra cuenta).' }),
+    ]);
+    mas.appendChild(precio);
+
     // Platos
     mas.appendChild(h('header', { class: 'receta-cabecera' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos' }),
@@ -316,7 +375,7 @@
     ]));
     app.appendChild(mas);
     // La tarjeta entra como bloque, y su contenido en cascada dentro.
-    revelar([comoFunciona]);
+    revelar([comoFunciona, precio]);
     revelar([comoFunciona.querySelector('.comofunciona-titulo')]
       .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora')))
       .concat([comoFunciona.querySelector('.comofunciona-frase'), comoFunciona.querySelector('.opciones-boton')]));
@@ -386,7 +445,7 @@
     var enlaceWa = wa();
 
     app.appendChild(h('article', { class: 'receta' }, [
-      h('div', { class: 'receta-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') }),
+      cajaFoto('receta-foto', p.foto, foco(p, 'foto_pos'), zoomDe(p, 'foto_zoom')),
       h('header', { class: 'receta-cabecera' }, [
         h('span', { class: 'sobre-titulo', texto: catNombre(p.categoria) }),
         h('h1', { texto: p.titulo }),
@@ -497,41 +556,92 @@
     });
   }
 
-  // Hace un elemento "reencuadrable": arrastrar mueve el punto focal
-  // (background-position si es un div con imagen de fondo, u object-position
-  // si es <img>/<video>). onFin(x,y) se llama al soltar, para guardar.
-  function hazEncuadrable(el, esMedia, posInicial, onFin) {
+  // Hace un elemento "reencuadrable": arrastrar mueve el punto focal y se puede
+  // hacer zoom (rueda del ratón, pellizco con dos dedos, o el control que se le
+  // conecte con controlZoom). El fondo va en un div (background-position +
+  // transform) o en <img>/<video> (object-position + transform). onFin(pos, zoom)
+  // se llama al terminar cada ajuste, para guardarlo.
+  function hazEncuadrable(el, esMedia, posInicial, zoomInicial, onFin) {
     el.classList.add('encuadrable');
-    var drag = false, sx = 0, sy = 0, bx = 50, by = 50;
     var m = /(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/.exec(posInicial || '50% 50%');
     var cx = m ? parseFloat(m[1]) : 50, cy = m ? parseFloat(m[2]) : 50;
-    function clamp(v) { return v < 0 ? 0 : v > 100 ? 100 : v; }
-    function aplica(x, y) {
-      if (esMedia) { el.style.objectPosition = x + '% ' + y + '%'; }
-      else { el.style.backgroundPosition = x + '% ' + y + '%'; }
+    var z = (zoomInicial >= 1 && zoomInicial <= 4) ? zoomInicial : 1;
+    var ctrl = {};
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+    function aplica() {
+      var o = cx + '% ' + cy + '%';
+      if (esMedia) { el.style.objectPosition = o; } else { el.style.backgroundPosition = o; }
+      el.style.transform = 'scale(' + z + ')';
+      el.style.transformOrigin = o;
     }
-    aplica(cx, cy);
+    aplica();
+    function guardar() { if (onFin) { onFin(cx + '% ' + cy + '%', z); } }
+
+    var punteros = {}, pellizco = null, arrastra = false, sx = 0, sy = 0, bx = 50, by = 50, guardaZoom = null;
+
     el.addEventListener('pointerdown', function (ev) {
-      drag = true; sx = ev.clientX; sy = ev.clientY; bx = cx; by = cy;
+      punteros[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
       try { el.setPointerCapture(ev.pointerId); } catch (e) {}
-      el.classList.add('arrastrando');
+      var ids = Object.keys(punteros);
+      if (ids.length >= 2) {
+        var p1 = punteros[ids[0]], p2 = punteros[ids[1]];
+        pellizco = { d: Math.hypot(p1.x - p2.x, p1.y - p2.y) || 1, z: z };
+        arrastra = false; el.classList.remove('arrastrando');
+      } else {
+        arrastra = true; sx = ev.clientX; sy = ev.clientY; bx = cx; by = cy;
+        el.classList.add('arrastrando');
+      }
       ev.preventDefault();
     });
     el.addEventListener('pointermove', function (ev) {
-      if (!drag) { return; }
+      if (!punteros[ev.pointerId]) { return; }
+      punteros[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+      var ids = Object.keys(punteros);
+      if (pellizco && ids.length >= 2) {
+        var p1 = punteros[ids[0]], p2 = punteros[ids[1]];
+        var d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        z = clamp(pellizco.z * (d / pellizco.d), 1, 4);
+        aplica(); if (ctrl.onZoom) { ctrl.onZoom(z); }
+        return;
+      }
+      if (!arrastra) { return; }
       var r = el.getBoundingClientRect();
       if (!r.width || !r.height) { return; }
-      cx = clamp(bx - (ev.clientX - sx) / r.width * 100);
-      cy = clamp(by - (ev.clientY - sy) / r.height * 100);
-      aplica(cx, cy);
+      cx = clamp(bx - (ev.clientX - sx) / r.width * 100 / z, 0, 100);
+      cy = clamp(by - (ev.clientY - sy) / r.height * 100 / z, 0, 100);
+      aplica();
     });
-    function fin() { if (!drag) { return; } drag = false; el.classList.remove('arrastrando'); if (onFin) { onFin(cx + '% ' + cy + '%'); } }
-    el.addEventListener('pointerup', fin);
-    el.addEventListener('pointercancel', fin);
-    return {
-      centrar: function () { cx = 50; cy = 50; aplica(50, 50); if (onFin) { onFin('50% 50%'); } },
-      pos: function () { return cx + '% ' + cy + '%'; },
-    };
+    function soltar(ev) {
+      if (punteros[ev.pointerId]) { delete punteros[ev.pointerId]; }
+      var ids = Object.keys(punteros);
+      if (pellizco && ids.length < 2) { pellizco = null; guardar(); }
+      if (arrastra && ids.length === 0) { arrastra = false; el.classList.remove('arrastrando'); guardar(); }
+    }
+    el.addEventListener('pointerup', soltar);
+    el.addEventListener('pointercancel', soltar);
+    el.addEventListener('wheel', function (ev) {
+      ev.preventDefault();
+      z = clamp(z * (ev.deltaY < 0 ? 1.09 : 0.917), 1, 4);
+      aplica(); if (ctrl.onZoom) { ctrl.onZoom(z); }
+      clearTimeout(guardaZoom); guardaZoom = setTimeout(guardar, 350);
+    }, { passive: false });
+
+    ctrl.centrar = function () { cx = 50; cy = 50; z = 1; aplica(); if (ctrl.onZoom) { ctrl.onZoom(1); } guardar(); };
+    ctrl.getZoom = function () { return z; };
+    ctrl.setZoom = function (v, final) { z = clamp(v, 1, 4); aplica(); if (ctrl.onZoom) { ctrl.onZoom(z); } if (final) { guardar(); } };
+    ctrl.pos = function () { return cx + '% ' + cy + '%'; };
+    return ctrl;
+  }
+
+  // Control visual de zoom (deslizador) que se engancha a un encuadrable.
+  function controlZoom(enc) {
+    var s = h('input', { type: 'range', class: 'zoom-slider', min: '1', max: '4', step: '0.01', value: String(enc.getZoom()), 'aria-label': 'Zoom' });
+    s.addEventListener('input', function () { enc.setZoom(parseFloat(s.value), false); });
+    s.addEventListener('change', function () { enc.setZoom(parseFloat(s.value), true); });
+    enc.onZoom = function (z) { s.value = String(z); };
+    var menos = h('button', { type: 'button', class: 'zoom-boton', 'aria-label': 'Alejar', texto: '−', onclick: function () { enc.setZoom(enc.getZoom() - 0.25, true); s.value = String(enc.getZoom()); } });
+    var mas = h('button', { type: 'button', class: 'zoom-boton', 'aria-label': 'Acercar', texto: '+', onclick: function () { enc.setZoom(enc.getZoom() + 0.25, true); s.value = String(enc.getZoom()); } });
+    return h('span', { class: 'zoom-control' }, [menos, s, mas]);
   }
 
   function clave() { return sessionStorage.getItem('bm_clave') || ''; }
@@ -621,13 +731,14 @@
     // Perfil del cocinero: logo editable
     var logoActual = (d.ajustes && d.ajustes.logo) || '/assets/img/logo.webp';
     var vistaLogo = h('img', { class: 'perfil-logo', src: logoActual, alt: 'Logo actual' });
+    var logoCaja = h('span', { class: 'perfil-logo-caja' }, [vistaLogo]);
     var fLogo = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': 'Nuevo logo' });
     function guardarLogo(url) {
       return llamarApi('POST', '/api/ajustes', JSON.stringify({ logo: url }), 'application/json').then(function (j) {
         cachePlatos = null;
         var nuevo = j.logo || '/assets/img/logo.webp';
         vistaLogo.src = nuevo;
-        aplicarLogo({ ajustes: { logo: j.logo } });
+        aplicarLogo({ ajustes: { logo: j.logo, logoPos: j.logoPos, logoZoom: j.logoZoom } });
         if (!j.logo) {
           [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.src = nuevo; });
         }
@@ -639,17 +750,18 @@
       if (!archivo) { return; }
       llamarApi('POST', '/api/foto', archivo, archivo.type)
         .then(function (j) { return guardarLogo(j.url); })
+        .then(function () { encLogo.centrar(); })
         .catch(function (e) { avisa(e.message, true); })
         .finally(function () { fLogo.value = ''; });
     });
-    var encLogo = hazEncuadrable(vistaLogo, true, (d.ajustes && d.ajustes.logoPos) || '50% 50%', function (pos) {
-      llamarApi('POST', '/api/ajustes', JSON.stringify({ logoPos: pos }), 'application/json').then(function () {
+    var encLogo = hazEncuadrable(vistaLogo, true, (d.ajustes && d.ajustes.logoPos) || '50% 50%', zoomDe(d.ajustes, 'logoZoom'), function (pos, zoom) {
+      llamarApi('POST', '/api/ajustes', JSON.stringify({ logoPos: pos, logoZoom: zoom }), 'application/json').then(function () {
         cachePlatos = null;
-        [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.style.objectPosition = pos; });
+        [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { aplicarZoomImg(i, pos, zoom); });
       }).catch(function (e) { avisa(e.message, true); });
     });
     seccion.appendChild(h('section', { class: 'panel perfil-chef' }, [
-      vistaLogo,
+      logoCaja,
       h('div', { class: 'perfil-campos' }, [
         h('strong', { texto: 'Perfil del cocinero' }),
         h('label', { class: 'perfil-subir' }, [
@@ -658,19 +770,22 @@
           fLogo,
         ]),
         h('span', { class: 'encuadre-hint' }, [
-          document.createTextNode('Arrastra el logo para centrarlo · '),
+          document.createTextNode('Arrastra para mover · pellizca o usa el zoom · '),
           h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { encLogo.centrar(); } }),
         ]),
+        controlZoom(encLogo),
         (d.ajustes && d.ajustes.logo) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Restaurar el original', onclick: function (ev) {
           ev.preventDefault();
-          guardarLogo('');
+          guardarLogo('').then(function () { encLogo.centrar(); });
         } }) : null,
       ]),
     ]));
 
-    // Portada del inicio: foto o vídeo editable, con reencuadre por arrastre
+    // Portada del inicio: foto o vídeo editable, con reencuadre y zoom
     var vistaPortada = h('div', { class: 'perfil-portada-vista' });
+    var zoomPortadaCont = h('span', { class: 'zoom-hueco' });
     var portadaPosActual = (d.ajustes && d.ajustes.portadaPos) || '50% 50%';
+    var portadaZoomActual = zoomDe(d.ajustes, 'portadaZoom');
     var encPortada = null;
     function pintaVistaPortada(url, tipo) {
       vistaPortada.textContent = '';
@@ -686,12 +801,14 @@
         esMedia = false;
         vistaPortada.appendChild(inner);
       }
-      encPortada = hazEncuadrable(inner, esMedia, portadaPosActual, function (pos) {
-        portadaPosActual = pos;
-        llamarApi('POST', '/api/ajustes', JSON.stringify({ portadaPos: pos }), 'application/json')
+      encPortada = hazEncuadrable(inner, esMedia, portadaPosActual, portadaZoomActual, function (pos, zoom) {
+        portadaPosActual = pos; portadaZoomActual = zoom;
+        llamarApi('POST', '/api/ajustes', JSON.stringify({ portadaPos: pos, portadaZoom: zoom }), 'application/json')
           .then(function () { cachePlatos = null; })
           .catch(function (e) { avisa(e.message, true); });
       });
+      zoomPortadaCont.textContent = '';
+      zoomPortadaCont.appendChild(controlZoom(encPortada));
     }
     pintaVistaPortada((d.ajustes && d.ajustes.portada) || '', (d.ajustes && d.ajustes.portadaTipo) || '');
 
@@ -702,9 +819,9 @@
       estadoPortada.style.display = txt ? '' : 'none';
     }
     function guardarPortada(url, tipo) {
-      // Nueva portada: el encuadre vuelve al centro.
-      portadaPosActual = '50% 50%';
-      return llamarApi('POST', '/api/ajustes', JSON.stringify({ portada: url, portadaTipo: tipo, portadaPos: '50% 50%' }), 'application/json').then(function (j) {
+      // Nueva portada: el encuadre vuelve al centro y sin zoom.
+      portadaPosActual = '50% 50%'; portadaZoomActual = 1;
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ portada: url, portadaTipo: tipo, portadaPos: '50% 50%', portadaZoom: 1 }), 'application/json').then(function (j) {
         cachePlatos = null;
         pintaVistaPortada(j.portada, j.portadaTipo);
         avisa(j.portada ? 'Portada actualizada.' : 'Portada restaurada a la foto por defecto.');
@@ -744,9 +861,10 @@
           fPortada,
         ]),
         h('span', { class: 'encuadre-hint' }, [
-          document.createTextNode('Arrastra la vista para centrarla · '),
+          document.createTextNode('Arrastra para mover · pellizca o usa el zoom · '),
           h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { if (encPortada) { encPortada.centrar(); } } }),
         ]),
+        zoomPortadaCont,
         estadoPortada,
         (d.ajustes && d.ajustes.portada) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Quitar y usar la foto por defecto', onclick: function (ev) {
           ev.preventDefault();
@@ -755,27 +873,31 @@
       ]),
     ]));
 
-    // Foto de la página de contacto (imagen, con reencuadre)
+    // Foto de la página de contacto (imagen, con reencuadre y zoom)
     var vistaContacto = h('div', { class: 'perfil-portada-vista' });
+    var zoomContactoCont = h('span', { class: 'zoom-hueco' });
     var contactoPosActual = (d.ajustes && d.ajustes.contactoPos) || '50% 50%';
+    var contactoZoomActual = zoomDe(d.ajustes, 'contactoZoom');
     var encContacto = null;
     function pintaVistaContacto(url) {
       vistaContacto.textContent = '';
       var inner = h('div', { class: 'perfil-portada-img', estilo: "background-image:url('" + (url || '/assets/img/chef.webp') + "')" });
       vistaContacto.appendChild(inner);
-      encContacto = hazEncuadrable(inner, false, contactoPosActual, function (pos) {
-        contactoPosActual = pos;
-        llamarApi('POST', '/api/ajustes', JSON.stringify({ contactoPos: pos }), 'application/json')
+      encContacto = hazEncuadrable(inner, false, contactoPosActual, contactoZoomActual, function (pos, zoom) {
+        contactoPosActual = pos; contactoZoomActual = zoom;
+        llamarApi('POST', '/api/ajustes', JSON.stringify({ contactoPos: pos, contactoZoom: zoom }), 'application/json')
           .then(function () { cachePlatos = null; })
           .catch(function (e) { avisa(e.message, true); });
       });
+      zoomContactoCont.textContent = '';
+      zoomContactoCont.appendChild(controlZoom(encContacto));
     }
     pintaVistaContacto((d.ajustes && d.ajustes.contacto) || '');
     var fContacto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': 'Nueva foto de contacto' });
     var estadoContacto = h('small', { class: 'perfil-estado', estilo: 'display:none' });
     function guardarContacto(url) {
-      contactoPosActual = '50% 50%';
-      return llamarApi('POST', '/api/ajustes', JSON.stringify({ contacto: url, contactoPos: '50% 50%' }), 'application/json').then(function (j) {
+      contactoPosActual = '50% 50%'; contactoZoomActual = 1;
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ contacto: url, contactoPos: '50% 50%', contactoZoom: 1 }), 'application/json').then(function (j) {
         cachePlatos = null;
         pintaVistaContacto(j.contacto);
         avisa(j.contacto ? 'Foto de contacto actualizada.' : 'Foto de contacto restaurada.');
@@ -800,9 +922,10 @@
           fContacto,
         ]),
         h('span', { class: 'encuadre-hint' }, [
-          document.createTextNode('Arrastra la vista para centrarla · '),
+          document.createTextNode('Arrastra para mover · pellizca o usa el zoom · '),
           h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { if (encContacto) { encContacto.centrar(); } } }),
         ]),
+        zoomContactoCont,
         estadoContacto,
         (d.ajustes && d.ajustes.contacto) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Quitar y usar la foto por defecto', onclick: function (ev) {
           ev.preventDefault();
@@ -857,12 +980,14 @@
       var fDesc = h('textarea', { rows: '3', placeholder: 'Dos o tres frases que abran el apetito…', texto: p.descripcion });
       var fFoto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
       var fotoPos = foco(p, 'foto_pos');
-      var fotoVista = h('div', { class: 'form-foto-vista', estilo: p.foto ? ("background-image:url('" + p.foto + "');background-position:" + fotoPos) : '' });
-      var encFoto = hazEncuadrable(fotoVista, false, fotoPos, function (pos) { fotoPos = pos; });
+      var fotoZoom = zoomDe(p, 'foto_zoom');
+      var fotoCapa = h('div', { class: 'zoomfoto', estilo: p.foto ? ("background-image:url('" + p.foto + "')") : '' });
+      var fotoVista = h('div', { class: 'form-foto-vista tiene-fondo' }, [fotoCapa]);
+      var encFoto = hazEncuadrable(fotoCapa, false, fotoPos, fotoZoom, function (pos, zoom) { fotoPos = pos; fotoZoom = zoom; });
       fFoto.addEventListener('change', function () {
         var a = fFoto.files[0];
         if (!a) { return; }
-        fotoVista.style.backgroundImage = "url('" + URL.createObjectURL(a) + "')";
+        fotoCapa.style.backgroundImage = "url('" + URL.createObjectURL(a) + "')";
         encFoto.centrar();
       });
 
@@ -878,7 +1003,7 @@
         listo.then(function (urlFoto) {
           return llamarApi('POST', '/api/platos', JSON.stringify({
             id: p.id, titulo: fTitulo.value, categoria: fCategoria.value, descripcion: fDesc.value,
-            ingredientes: fIngredientes.value, foto: urlFoto, foto_pos: fotoPos,
+            ingredientes: fIngredientes.value, foto: urlFoto, foto_pos: fotoPos, foto_zoom: fotoZoom,
           }), 'application/json');
         }).then(function (j) {
           var r = boton.getBoundingClientRect();
@@ -897,9 +1022,10 @@
         h('div', { class: 'form-foto-encuadre' }, [
           fotoVista,
           h('span', { class: 'encuadre-hint' }, [
-            document.createTextNode('Arrastra la foto para centrarla · '),
+            document.createTextNode('Arrastra para mover · pellizca o usa el zoom · '),
             h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { encFoto.centrar(); } }),
           ]),
+          controlZoom(encFoto),
         ]),
         campo('Ingredientes', fIngredientes, 'sin cantidades, separados por comas'),
         campo('Descripción apetitosa', fDesc),
@@ -935,9 +1061,10 @@
     aj = aj || {};
     var fotoUrl = aj.contacto || '/assets/img/chef.webp';
     var fotoPos = foco(aj, 'contactoPos');
+    var fotoZoom = aj.contacto ? zoomDe(aj, 'contactoZoom') : 1;
 
     var tarjeta = h('section', { class: 'contacto-tarjeta' }, [
-      h('div', { class: 'contacto-foto', estilo: "background-image:url('" + fotoUrl + "');background-position:" + fotoPos, role: 'img', 'aria-label': 'El chef de Bon Mos' }),
+      cajaFoto('contacto-foto', fotoUrl, fotoPos, fotoZoom, { role: 'img', 'aria-label': 'El chef de Bon Mos' }),
       h('div', { class: 'contacto-cuerpo' }, [
         h('span', { class: 'contacto-eyebrow', texto: 'Contacto' }),
         h('h1', { class: 'contacto-titulo', texto: '¿Tienes alguna duda o quieres hacer un pedido?' }),
@@ -991,24 +1118,14 @@
     ]));
     app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
 
-    // Cada servicio usa una foto de plato ya subida (con su punto focal); si
-    // aún no hay fotos, se usa el icono de marca como respaldo.
-    var conFoto = (platos || []).filter(function (p) { return p.foto; });
+    // Cada servicio tiene su propia foto (webp en /assets/img/eventos). Si la
+    // imagen fallara, el color de fondo del recuadro sigue dando el relleno.
     var lista = h('div', { class: 'eventos' });
     EVENTOS.forEach(function (ev, i) {
-      var media = h('div', { class: 'evento-media' }, [
+      var media = h('div', { class: 'evento-media evento-media-foto' }, [
         h('span', { class: 'evento-num', texto: String(i + 1) }),
       ]);
-      var pf = conFoto.length ? conFoto[i % conFoto.length] : null;
-      if (pf) {
-        media.classList.add('evento-media-foto');
-        media.style.backgroundImage = "url('" + pf.foto + "')";
-        media.style.backgroundPosition = foco(pf, 'foto_pos');
-      } else {
-        var ic = h('span', { class: 'evento-icono' });
-        ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
-        media.appendChild(ic);
-      }
+      media.style.backgroundImage = "url('/assets/img/eventos/" + ev.icono + ".webp')";
       lista.appendChild(h('article', { class: 'evento' }, [
         media,
         h('div', { class: 'evento-cuerpo' }, [

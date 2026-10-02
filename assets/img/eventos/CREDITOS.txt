@@ -1,0 +1,15 @@
+Imágenes de la página de Eventos
+================================
+
+Fotografías de stock con licencia libre (CC0 / dominio público) obtenidas de
+rawpixel.com a través del buscador Openverse (openverse.org).
+
+  paella.webp       — paella de marisco
+  cena.webp         — mesa con vistas al atardecer (cena romántica)
+  grupo.webp        — banquete montado en carpa (comida/cena de grupo)
+  aniversario.webp  — mesa íntima a la luz de las velas
+  barbacoa.webp     — carne a la brasa
+  lista.webp        — bufé de catering
+
+Descargadas y convertidas a WebP (1200x800, calidad 74) el 2026-10-02.
+Se pueden sustituir por fotos propias del chef cuando se quiera.
