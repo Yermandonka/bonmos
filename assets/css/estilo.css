@@ -102,7 +102,11 @@ img { max-width: 100%; }
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Se esconde al scrollear hacia abajo y reaparece al subir */
+.cabecera-oculta { transform: translateY(calc(-100% - 2rem)); }
 
 .marca {
   display: flex;

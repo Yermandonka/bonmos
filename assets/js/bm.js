@@ -972,6 +972,31 @@
 
   initMenu();
 
+  // La cabecera se esconde al scrollear hacia abajo y reaparece al subir.
+  function initCabeceraScroll() {
+    var cab = document.querySelector('.cabecera');
+    if (!cab) { return; }
+    var lastY = window.pageYOffset || 0, ticking = false, menu = null;
+    function actualizar() {
+      ticking = false;
+      var y = window.pageYOffset || 0;
+      if (!menu) { menu = document.querySelector('.menu-panel'); }
+      var menuAbierto = menu && menu.classList.contains('abierto');
+      if (y <= 80 || menuAbierto) {
+        cab.classList.remove('cabecera-oculta');
+      } else if (y > lastY + 6) {
+        cab.classList.add('cabecera-oculta');
+      } else if (y < lastY - 6) {
+        cab.classList.remove('cabecera-oculta');
+      }
+      lastY = y;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(actualizar); }
+    }, { passive: true });
+  }
+  initCabeceraScroll();
+
   // ---------- Arranque ----------
 
   // Páginas que no dependen de la carta: se pintan de inmediato.
