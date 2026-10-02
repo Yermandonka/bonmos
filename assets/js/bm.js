@@ -400,48 +400,85 @@
         reject(new Error('sin soporte de compresión'));
         return;
       }
+      var w1 = null, w2 = null, limpio = false;
       var video = document.createElement('video');
-      video.muted = true;
+      video.muted = true; video.defaultMuted = true; video.volume = 0;
       video.playsInline = true;
+      video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', ''); video.setAttribute('autoplay', '');
+      // iOS NO reproduce un <video> fuera del DOM: lo dejamos presente pero oculto.
+      video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
       video.src = URL.createObjectURL(archivo);
-      video.onerror = function () { reject(new Error('No se pudo leer el vídeo.')); };
+
+      function limpiar() {
+        if (limpio) { return; } limpio = true;
+        if (w1) { clearTimeout(w1); } if (w2) { clearTimeout(w2); }
+        try { URL.revokeObjectURL(video.src); } catch (e) {}
+        if (video.parentNode) { video.parentNode.removeChild(video); }
+      }
+      function fallar(msg) { limpiar(); reject(new Error(msg || 'compresión fallida')); }
+
+      document.body.appendChild(video);
+      video.onerror = function () { fallar('No se pudo leer el vídeo.'); };
+
       video.onloadedmetadata = function () {
         var MAXW = 1280, MAXDUR = 20;
         var escala = Math.min(1, MAXW / (video.videoWidth || MAXW));
         var w = Math.round((video.videoWidth || MAXW) * escala);
         var hh = Math.round((video.videoHeight || 720) * escala);
-        w -= w % 2; hh -= hh % 2;
+        w -= w % 2; hh -= hh % 2; if (w < 2) { w = 2; } if (hh < 2) { hh = 2; }
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = hh;
         var ctx = canvas.getContext('2d');
         var stream = canvas.captureStream(30);
-        var mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
-          : MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8'
-          : 'video/webm';
+        // Mejor códec disponible: MP4/H.264 (iPhone/Safari, reproducible en todos
+        // los navegadores) y, si no, WebM (Zen/Chrome/Firefox).
+        var candidatos = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+        var mime = '';
+        for (var ci = 0; ci < candidatos.length; ci++) {
+          if (MediaRecorder.isTypeSupported(candidatos[ci])) { mime = candidatos[ci]; break; }
+        }
+        if (!mime) { fallar('sin códec compatible'); return; }
+        var mimeBase = mime.split(';')[0];
         var rec;
         try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2500000 }); }
-        catch (e) { reject(e); return; }
-        var trozos = [];
+        catch (e) { fallar('MediaRecorder: ' + e.message); return; }
+        var trozos = [], acabado = false, dibujando = true;
         rec.ondataavailable = function (e) { if (e.data && e.data.size) { trozos.push(e.data); } };
         rec.onstop = function () {
-          URL.revokeObjectURL(video.src);
-          resolve(new Blob(trozos, { type: 'video/webm' }));
+          limpiar();
+          if (!trozos.length) { reject(new Error('sin datos de vídeo')); return; }
+          resolve({ blob: new Blob(trozos, { type: mimeBase }), mime: mimeBase });
         };
-        var dibujando = true;
         function pinta() {
           if (!dibujando) { return; }
-          ctx.drawImage(video, 0, 0, w, hh);
+          try { ctx.drawImage(video, 0, 0, w, hh); } catch (e) {}
           var dur = Math.min(video.duration || MAXDUR, MAXDUR);
-          if (onProgreso && dur) { onProgreso(Math.min(1, video.currentTime / dur)); }
+          if (onProgreso && dur) { onProgreso(Math.min(1, (video.currentTime || 0) / dur)); }
           requestAnimationFrame(pinta);
         }
-        function terminar() { if (dibujando) { dibujando = false; try { rec.stop(); } catch (e) {} } }
+        function terminar() {
+          if (acabado) { return; } acabado = true; dibujando = false;
+          try { rec.stop(); } catch (e) { fallar('no se pudo cerrar la grabación'); }
+        }
         video.onended = terminar;
-        video.ontimeupdate = function () { if (video.currentTime >= MAXDUR) { video.pause(); terminar(); } };
-        rec.start(200);
-        var p = video.play();
-        if (p && p.then) { p.then(function () { pinta(); }).catch(function () { pinta(); }); }
-        else { pinta(); }
+        video.ontimeupdate = function () { if (video.currentTime >= MAXDUR) { try { video.pause(); } catch (e) {} terminar(); } };
+        // Arrancamos la grabación cuando el vídeo EMPIEZA a reproducir de verdad
+        // (clave en iOS: así hay fotogramas que capturar).
+        video.onplaying = function () {
+          if (rec.state === 'inactive') {
+            try { rec.start(200); } catch (e) { fallar('MediaRecorder start: ' + e.message); return; }
+          }
+          pinta();
+        };
+        var pr = video.play();
+        if (pr && pr.catch) { pr.catch(function () {}); }
+        // Watchdog: si en 6 s el vídeo no ha avanzado (iOS atascado), abortamos
+        // para subir el original en vez de quedarnos colgados.
+        w1 = setTimeout(function () {
+          if (!acabado && (video.currentTime || 0) < 0.05) { fallar('el vídeo no avanza'); }
+        }, 6000);
+        w2 = setTimeout(function () { if (!acabado) { terminar(); } }, 150000);
       };
     });
   }
@@ -585,7 +622,7 @@
     }
     pintaVistaPortada((d.ajustes && d.ajustes.portada) || '', (d.ajustes && d.ajustes.portadaTipo) || '');
 
-    var fPortada = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime', 'aria-label': 'Nueva portada' });
+    var fPortada = h('input', { type: 'file', accept: 'image/*,video/*', 'aria-label': 'Nueva portada' });
     var estadoPortada = h('small', { class: 'perfil-estado', estilo: 'display:none' });
     function estadoPort(txt) {
       estadoPortada.textContent = txt || '';
@@ -601,7 +638,10 @@
     fPortada.addEventListener('change', function () {
       var archivo = fPortada.files[0];
       if (!archivo) { return; }
-      var esVideo = /^video\//.test(archivo.type);
+      // iOS a veces no rellena el tipo del .mov: detectamos también por extensión.
+      var nombre = archivo.name || '';
+      var esVideo = /^video\//.test(archivo.type) || /\.(mov|mp4|m4v|webm|ogv|mkv|qt)$/i.test(nombre);
+      var mimeOriginal = archivo.type || (/\.mov$|\.qt$/i.test(nombre) ? 'video/quicktime' : 'video/mp4');
       function subir(blob, mime) {
         estadoPort('Subiendo…');
         return llamarApi('POST', '/api/foto', blob, mime).then(function (j) { return guardarPortada(j.url, j.tipo); });
@@ -610,8 +650,7 @@
       if (esVideo) {
         estadoPort('Comprimiendo el vídeo… 0%');
         preparar = comprimirVideo(archivo, function (p) { estadoPort('Comprimiendo el vídeo… ' + Math.round(p * 100) + '%'); })
-          .then(function (blob) { return { blob: blob, mime: 'video/webm' }; })
-          .catch(function () { estadoPort('Subiendo el vídeo original…'); return { blob: archivo, mime: archivo.type || 'video/mp4' }; });
+          .catch(function () { estadoPort('Subiendo el vídeo original…'); return { blob: archivo, mime: mimeOriginal }; });
       } else {
         preparar = Promise.resolve({ blob: archivo, mime: archivo.type });
       }
@@ -626,7 +665,7 @@
         h('strong', { texto: 'Portada del inicio' }),
         h('label', { class: 'perfil-subir' }, [
           document.createTextNode('Cambiar foto o vídeo '),
-          h('small', { texto: '(foto JPG/PNG/WebP o vídeo MP4/WebM; el vídeo se comprime solo, máx. 20 s)' }),
+          h('small', { texto: '(foto o vídeo, también .mov del iPhone; el vídeo se comprime solo, máx. 20 s)' }),
           fPortada,
         ]),
         estadoPortada,
