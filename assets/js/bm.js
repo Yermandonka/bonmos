@@ -274,7 +274,9 @@
       'Te dejamos la cocina limpia y organizada.',
       'Tuppers listos para comer.',
     ];
-    // ¿Cómo funciona? (recuadro marrón): pasos + una frase + botón centrado
+    // ¿Cómo funciona? (recuadro marrón): pasos + una frase + botón con icono
+    var botonWa = h('a', { class: 'boton boton-sorpresa opciones-boton', href: wa(), target: '_blank', rel: 'noopener' });
+    botonWa.innerHTML = '<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 27l6.2-1.6c1.7.9 3.7 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-3.7.9.9-3.6-.2-.4c-1-1.6-1.5-3.4-1.5-5.1C5.9 9.5 10.4 5 16 5s10.1 4.5 10.1 10S21.6 24.8 16 24.8zm5.6-7.5c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.2-.2.2-.3.3-.5.1-.2.1-.4 0-.5-.1-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.3-.6-.4z"/></svg><span>Reservar por WhatsApp</span>';
     var comoFunciona = h('section', { class: 'comofunciona' }, [
       h('h2', { class: 'comofunciona-titulo', texto: '¿Cómo funciona?' }),
       h('ol', { class: 'pasos-pildora' }, pasos.map(function (txt, i) {
@@ -284,14 +286,14 @@
         ]);
       })),
       h('p', { class: 'comofunciona-frase', texto: 'Tú eliges. Nosotros cocinamos. Tú calientas.' }),
-      h('a', { class: 'boton boton-sorpresa opciones-boton', href: wa(), target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
+      botonWa,
     ]);
     mas.appendChild(comoFunciona);
 
     // Platos
     mas.appendChild(h('header', { class: 'receta-cabecera' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos' }),
-      h('h2', { class: 'inicio-titulo', texto: 'Platos que cocino para ti' }),
+      h('h2', { class: 'inicio-titulo', texto: 'Platos que cocinamos para ti' }),
     ]));
     mas.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
     var rejilla = h('section', { class: 'rejilla' });
@@ -301,8 +303,8 @@
       h('a', { class: 'boton boton-sorpresa', href: '/carta', texto: 'Ver la carta completa' }),
     ]));
     app.appendChild(mas);
-    // Entrada en cascada de todo lo del recuadro marrón: título, píldoras,
-    // opciones y botón; y luego las tarjetas de platos.
+    // La tarjeta entra como bloque, y su contenido en cascada dentro.
+    revelar([comoFunciona]);
     revelar([comoFunciona.querySelector('.comofunciona-titulo')]
       .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora')))
       .concat([comoFunciona.querySelector('.comofunciona-frase'), comoFunciona.querySelector('.opciones-boton')]));

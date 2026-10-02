@@ -448,14 +448,23 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
 
 /* ---------- ¿Cómo funciona? (inicio) ---------- */
 .comofunciona {
+  position: relative;
   max-width: 680px;
   margin: 0 auto 2rem;
-  padding: 1.9rem 1.4rem 2.1rem;
-  border-radius: 24px;
-  background-color: #4e3a28;
-  background-image: linear-gradient(160deg, #5a442f, #2f2419);
+  padding: 2.1rem 1.5rem 2.3rem;
+  border-radius: 26px;
   color: var(--crema-clara);
-  box-shadow: var(--sombra-alta), inset 0 1px 0 rgba(255, 250, 240, 0.12);
+  background-color: #3a2a1b;
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='140'%20height='140'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'%20opacity='0.05'/%3E%3C/svg%3E"),
+    radial-gradient(120% 90% at 0% 0%, rgba(217, 122, 42, 0.42) 0%, rgba(217, 122, 42, 0) 55%),
+    radial-gradient(120% 90% at 100% 0%, rgba(165, 129, 60, 0.32) 0%, rgba(165, 129, 60, 0) 55%),
+    radial-gradient(150% 130% at 50% 135%, rgba(38, 71, 107, 0.3) 0%, rgba(38, 71, 107, 0) 55%),
+    linear-gradient(160deg, #4e3a28 0%, #241a11 100%);
+  background-size: 140px 140px, auto, auto, auto, auto;
+  border: 1px solid rgba(238, 181, 47, 0.18);
+  box-shadow: 0 26px 60px rgba(28, 20, 12, 0.34), inset 0 1px 0 rgba(255, 250, 240, 0.14);
+  overflow: hidden;
 }
 
 .comofunciona-titulo {
@@ -486,59 +495,72 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
 .paso-pildora {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  background: var(--crema-clara);
+  gap: 0.95rem;
+  background: linear-gradient(180deg, #fbf5e8, var(--crema-clara));
   color: var(--tinta);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 999px;
-  padding: 0.7rem 1.1rem 0.7rem 0.7rem;
+  padding: 0.7rem 1.25rem 0.7rem 0.6rem;
   font-size: 1rem;
-  line-height: 1.35;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  font-weight: 500;
+  line-height: 1.3;
+  box-shadow: 0 4px 14px rgba(20, 14, 8, 0.26);
 }
 
 .paso-pildora:first-child {
   background: #fff;
-  font-weight: 500;
+  box-shadow: 0 5px 18px rgba(20, 14, 8, 0.3), 0 0 0 1.5px rgba(238, 181, 47, 0.6);
 }
 
 .paso-num {
   flex-shrink: 0;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.3rem;
+  height: 2.3rem;
   border-radius: 50%;
-  background: var(--naranja-oscuro);
-  color: var(--crema-clara);
+  background: radial-gradient(circle at 35% 28%, #dd7f2e 0%, var(--naranja-oscuro) 75%);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  border: 1px solid rgba(238, 181, 47, 0.55);
+  box-shadow: 0 3px 9px rgba(143, 70, 16, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 /* ---------- Frase + reserva (dentro del recuadro marrón) ---------- */
 .comofunciona-frase {
-  margin: 1.4rem auto 0;
+  margin: 1.5rem auto 0;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(247, 239, 221, 0.2);
-  max-width: 24ch;
   text-align: center;
+  white-space: nowrap;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 500;
   font-style: italic;
-  font-size: 1.5rem;
-  line-height: 1.35;
-  color: #fff;
+  font-size: clamp(0.7rem, 2.6vw, 1.05rem);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .comofunciona .opciones-boton {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
   width: -moz-fit-content;
   width: fit-content;
   margin: 1.3rem auto 0;
-  padding: 0.85rem 2.1rem;
-  font-size: 0.9rem;
+  padding: 0.9rem 2rem;
+  font-size: 0.88rem;
+  box-shadow: 0 8px 22px rgba(143, 70, 16, 0.4);
 }
+
+.comofunciona .opciones-boton svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.comofunciona .opciones-boton:hover { box-shadow: 0 12px 28px rgba(143, 70, 16, 0.5); }
 
 /* ---------- Micro-interacciones y entradas (inicio) ---------- */
 .paso-pildora {
@@ -560,18 +582,56 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   background: var(--naranja);
 }
 
-@keyframes pildora-entra {
-  from { opacity: 0; transform: translateX(-28px); }
+/* Entrada de la tarjeta entera */
+@keyframes comofunciona-entra {
+  from { opacity: 0; transform: translateY(32px) scale(0.97); }
   to   { opacity: 1; transform: none; }
 }
 
+.comofunciona.revelar.visible {
+  animation: comofunciona-entra 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Título: subrayado dorado que crece */
+@keyframes linea-crece { from { width: 0; } to { width: 3rem; } }
+
+.comofunciona-titulo.revelar.visible { animation: subir 0.5s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.comofunciona-titulo.revelar.visible::after { animation: linea-crece 0.6s 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Píldoras: entran deslizando con rebote */
+@keyframes pildora-entra {
+  0%   { opacity: 0; transform: translateX(-34px); }
+  70%  { opacity: 1; }
+  100% { opacity: 1; transform: none; }
+}
+
 .paso-pildora.revelar.visible {
-  animation: pildora-entra 0.52s cubic-bezier(0.22, 1, 0.36, 1) var(--retardo, 0s) both;
+  animation: pildora-entra 0.55s cubic-bezier(0.34, 1.3, 0.5, 1) var(--retardo, 0s) both;
+}
+
+/* El número hace "pop" justo después de que llegue su píldora */
+@keyframes num-pop {
+  0%   { transform: scale(0) rotate(-45deg); }
+  60%  { transform: scale(1.22) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.paso-pildora.revelar.visible .paso-num {
+  animation: num-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--retardo, 0s) + 0.14s) both;
 }
 
 /* Frase del recuadro: entrada suave */
 .comofunciona-frase.revelar.visible {
   animation: subir 0.55s cubic-bezier(0.22, 1, 0.36, 1) var(--retardo, 0s) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comofunciona.revelar.visible,
+  .comofunciona-titulo.revelar.visible,
+  .comofunciona-titulo.revelar.visible::after,
+  .paso-pildora.revelar.visible,
+  .paso-pildora.revelar.visible .paso-num,
+  .comofunciona-frase.revelar.visible { animation: none; }
 }
 
 /* Eventos: realce al pasar el ratón */
