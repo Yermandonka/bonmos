@@ -4,11 +4,14 @@ window.BM_CONFIG = {
   lema: 'Cuina de xef, a casa teua',
   whatsapp: '34604053509', // móvil de la empresa, con prefijo de país y sin espacios
   email: 'bonmosvlc@gmail.com',
+  // Clasificación de la carta — se muestra como filtros arriba del todo
   categorias: {
-    arroces: 'Arroces',
-    entrantes: 'Entrantes',
-    principal: 'Platos principales',
+    carnes: 'Carnes',
+    pescados: 'Pescados',
+    ensaladas: 'Ensaladas',
+    legumbres: 'Legumbres',
+    cremas: 'Cremas',
+    vegetariano: 'Vegetariano',
     dulces: 'Dulces',
-    bebidas: 'Bebidas',
   },
 };
