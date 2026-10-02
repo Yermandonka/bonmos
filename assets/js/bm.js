@@ -274,11 +274,7 @@
       'Te dejamos la cocina limpia y organizada.',
       'Tuppers listos para comer.',
     ];
-    // Dos opciones (dentro del mismo recuadro marrón)
-    var opciones = [
-      ['Opción 1', 'Tú eliges. Nosotros cocinamos. Tú calientas.'],
-      ['Opción 2', 'Eliges lo que quieres comer. Yo me ocupo del resto.'],
-    ];
+    // ¿Cómo funciona? (recuadro marrón): pasos + una frase + botón centrado
     var comoFunciona = h('section', { class: 'comofunciona' }, [
       h('h2', { class: 'comofunciona-titulo', texto: '¿Cómo funciona?' }),
       h('ol', { class: 'pasos-pildora' }, pasos.map(function (txt, i) {
@@ -287,12 +283,7 @@
           h('span', { texto: txt }),
         ]);
       })),
-      h('div', { class: 'opciones-grid' }, opciones.map(function (op) {
-        return h('div', { class: 'opcion' }, [
-          h('span', { class: 'opcion-num', texto: op[0] }),
-          h('p', { texto: op[1] }),
-        ]);
-      })),
+      h('p', { class: 'comofunciona-frase', texto: 'Tú eliges. Nosotros cocinamos. Tú calientas.' }),
       h('a', { class: 'boton boton-sorpresa opciones-boton', href: wa(), target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
     ]);
     mas.appendChild(comoFunciona);
@@ -314,8 +305,7 @@
     // opciones y botón; y luego las tarjetas de platos.
     revelar([comoFunciona.querySelector('.comofunciona-titulo')]
       .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora')))
-      .concat([].slice.call(comoFunciona.querySelectorAll('.opcion')))
-      .concat([comoFunciona.querySelector('.opciones-boton')]));
+      .concat([comoFunciona.querySelector('.comofunciona-frase'), comoFunciona.querySelector('.opciones-boton')]));
     revelar([].slice.call(rejilla.children));
   }
 
@@ -808,23 +798,16 @@
     ]));
     app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
 
-    // Las fotos de los eventos son platos ya subidos a la carta; si aún no
-    // hay fotos, se usa el icono como respaldo.
-    var fotos = (platos || []).map(function (p) { return p.foto; }).filter(Boolean);
-
+    // Cada servicio con su ficha de marca: fondo degradado + icono (siempre
+    // elegante y consistente, sin depender de la calidad de fotos sueltas).
     var lista = h('div', { class: 'eventos' });
     EVENTOS.forEach(function (ev, i) {
       var media = h('div', { class: 'evento-media' }, [
         h('span', { class: 'evento-num', texto: String(i + 1) }),
       ]);
-      if (fotos.length) {
-        media.classList.add('evento-media-foto');
-        media.style.backgroundImage = "url('" + fotos[i % fotos.length] + "')";
-      } else {
-        var ic = h('span', { class: 'evento-icono' });
-        ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
-        media.appendChild(ic);
-      }
+      var ic = h('span', { class: 'evento-icono' });
+      ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
+      media.appendChild(ic);
       lista.appendChild(h('article', { class: 'evento' }, [
         media,
         h('div', { class: 'evento-cuerpo' }, [
