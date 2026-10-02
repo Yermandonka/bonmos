@@ -307,7 +307,12 @@
       h('a', { class: 'boton boton-sorpresa', href: '/carta', texto: 'Ver la carta completa' }),
     ]));
     app.appendChild(mas);
-    revelar([comoFunciona, bloqueOpciones]);
+    // Entradas en cascada: título + cada píldora, y título + cada opción + botón
+    revelar([comoFunciona.querySelector('.comofunciona-titulo')]
+      .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora'))));
+    revelar([bloqueOpciones.querySelector('.opciones-titulo')]
+      .concat([].slice.call(bloqueOpciones.querySelectorAll('.opcion')))
+      .concat([bloqueOpciones.querySelector('.opciones-boton')]));
     revelar([].slice.call(rejilla.children));
   }
 
