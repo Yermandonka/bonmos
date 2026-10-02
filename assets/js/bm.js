@@ -256,6 +256,45 @@
     app.appendChild(portada);
 
     var mas = h('section', { id: 'inicio-mas', class: 'inicio-mas' });
+
+    // ¿Cómo funciona? — tarjeta con los pasos del servicio
+    var pasos = [
+      'Eliges qué te apetece comer durante la semana.',
+      'Te enviamos la lista de la compra, o la hacemos nosotros.',
+      'Cocinamos en tu casa.',
+      'Te dejamos la cocina limpia y organizada.',
+      'Tuppers listos para comer.',
+    ];
+    var comoFunciona = h('section', { class: 'comofunciona' }, [
+      h('h2', { class: 'comofunciona-titulo', texto: '¿Cómo funciona?' }),
+      h('ol', { class: 'pasos-pildora' }, pasos.map(function (txt, i) {
+        return h('li', { class: 'paso-pildora' }, [
+          h('span', { class: 'paso-num', texto: String(i + 1) }),
+          h('span', { texto: txt }),
+        ]);
+      })),
+    ]);
+    mas.appendChild(comoFunciona);
+
+    // Dos opciones + reserva por WhatsApp
+    var opciones = [
+      ['Opción 1', 'Tú eliges. Nosotros cocinamos. Tú calientas.'],
+      ['Opción 2', 'Eliges lo que quieres comer. Yo me ocupo del resto.'],
+    ];
+    var bloqueOpciones = h('section', { class: 'opciones' }, [
+      h('span', { class: 'sobre-titulo', texto: 'Tú decides' }),
+      h('h2', { class: 'opciones-titulo', texto: 'Dos maneras de disfrutarlo' }),
+      h('div', { class: 'opciones-grid' }, opciones.map(function (op) {
+        return h('div', { class: 'opcion' }, [
+          h('span', { class: 'opcion-num', texto: op[0] }),
+          h('p', { texto: op[1] }),
+        ]);
+      })),
+      h('a', { class: 'boton boton-sorpresa opciones-boton', href: wa(), target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
+    ]);
+    mas.appendChild(bloqueOpciones);
+
+    // Platos
     mas.appendChild(h('header', { class: 'receta-cabecera' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos' }),
       h('h2', { class: 'inicio-titulo', texto: 'Platos que cocino para ti' }),
@@ -268,6 +307,7 @@
       h('a', { class: 'boton boton-sorpresa', href: '/carta', texto: 'Ver la carta completa' }),
     ]));
     app.appendChild(mas);
+    revelar([comoFunciona, bloqueOpciones]);
     revelar([].slice.call(rejilla.children));
   }
 
