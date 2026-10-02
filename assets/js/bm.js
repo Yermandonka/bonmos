@@ -442,13 +442,13 @@
     seccion.appendChild(aviso);
 
     // Perfil del cocinero: logo editable
-    var logoActual = (d.ajustes && d.ajustes.logo) || '/assets/img/logo.png';
+    var logoActual = (d.ajustes && d.ajustes.logo) || '/assets/img/logo.webp';
     var vistaLogo = h('img', { class: 'perfil-logo', src: logoActual, alt: 'Logo actual' });
     var fLogo = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': 'Nuevo logo' });
     function guardarLogo(url) {
       return llamarApi('POST', '/api/ajustes', JSON.stringify({ logo: url }), 'application/json').then(function (j) {
         cachePlatos = null;
-        var nuevo = j.logo || '/assets/img/logo.png';
+        var nuevo = j.logo || '/assets/img/logo.webp';
         vistaLogo.src = nuevo;
         aplicarLogo({ ajustes: { logo: j.logo } });
         if (!j.logo) {
@@ -636,7 +636,7 @@
     { icono: 'lista', titulo: 'Catering listo en tu cocina', texto: 'Preparo todo en tu casa y lo dejo cocinado y decorado para que solo tengas que servir. Sin personal, sin estrés.' },
   ];
 
-  function renderEventos() {
+  function renderEventos(platos) {
     app.textContent = '';
     app.appendChild(h('header', { class: 'receta-cabecera' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos · Eventos' }),
@@ -645,13 +645,23 @@
     ]));
     app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
 
+    // Las fotos de los eventos son platos ya subidos a la carta; si aún no
+    // hay fotos, se usa el icono como respaldo.
+    var fotos = (platos || []).map(function (p) { return p.foto; }).filter(Boolean);
+
     var lista = h('div', { class: 'eventos' });
     EVENTOS.forEach(function (ev, i) {
       var media = h('div', { class: 'evento-media' }, [
         h('span', { class: 'evento-num', texto: String(i + 1) }),
       ]);
-      media.appendChild(h('span', { class: 'evento-icono' }));
-      media.lastChild.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
+      if (fotos.length) {
+        media.classList.add('evento-media-foto');
+        media.style.backgroundImage = "url('" + fotos[i % fotos.length] + "')";
+      } else {
+        var ic = h('span', { class: 'evento-icono' });
+        ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
+        media.appendChild(ic);
+      }
       lista.appendChild(h('article', { class: 'evento' }, [
         media,
         h('div', { class: 'evento-cuerpo' }, [
@@ -780,11 +790,10 @@
   // ---------- Arranque ----------
 
   // Páginas que no dependen de la carta: se pintan de inmediato.
-  if (pagina === 'eventos') { renderEventos(); }
-  else if (pagina === 'servicios') { renderServicios(); }
+  if (pagina === 'servicios') { renderServicios(); }
   else if (pagina === 'contacto') { renderContacto(); }
 
-  var necesitaDatos = pagina === 'inicio' || pagina === 'carta' || pagina === 'plato' || pagina === 'panel';
+  var necesitaDatos = pagina === 'inicio' || pagina === 'carta' || pagina === 'plato' || pagina === 'panel' || pagina === 'eventos';
 
   cargarPlatos().then(function (d) {
     aplicarLogo(d);
@@ -792,7 +801,10 @@
     else if (pagina === 'carta') { renderCarta(d); }
     else if (pagina === 'plato') { renderPlato(d); }
     else if (pagina === 'panel') { entrarPanel(d); }
+    else if (pagina === 'eventos') { renderEventos(d.platos); }
   }).catch(function (e) {
+    // Eventos funciona aunque no haya API: sin fotos, con iconos de respaldo.
+    if (pagina === 'eventos') { renderEventos([]); return; }
     if (!necesitaDatos) { return; }
     app.textContent = '';
     app.appendChild(h('p', { class: 'vacio', texto: 'No se pudo cargar la carta (' + e.message + '). Recarga la página.' }));

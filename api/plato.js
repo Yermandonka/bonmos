@@ -12,7 +12,7 @@ function esc(s) {
 export default async function handler(req, res) {
   const slug = new URL(req.url, 'http://x').searchParams.get('slug') || '';
   let p = null;
-  let logo = '/assets/img/logo.png';
+  let logo = '/assets/img/logo.webp';
   try {
     const d = await leerPlatos();
     p = d.platos.find(function (x) { return x.slug === slug; }) || null;
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   const base = 'https://' + host;
   const titulo = p ? p.titulo + ' · Bon Mos' : 'Plato · Bon Mos';
   const desc = p ? p.descripcion : 'Chef privado a domicilio. Cocina valenciana de mercado, cocinada en tu casa.';
-  const imagen = p && p.foto ? (p.foto.indexOf('http') === 0 ? p.foto : base + p.foto) : base + '/og.jpg';
+  const imagen = p && p.foto ? (p.foto.indexOf('http') === 0 ? p.foto : base + p.foto) : base + '/og.webp';
   const urlPlato = base + '/plato/' + encodeURIComponent(slug);
 
   const html = `<!DOCTYPE html>
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2b2117">
 <meta name="color-scheme" content="light">
-<link rel="icon" type="image/png" href="${esc(logo)}">
+<link rel="icon" type="image/webp" href="${esc(logo)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">

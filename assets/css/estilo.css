@@ -1091,6 +1091,11 @@ img { max-width: 100%; }
 .evento:nth-child(3n) .evento-media { background: linear-gradient(145deg, #2e5f93, var(--cobalto)); }
 .evento:nth-child(4n) .evento-media { background: linear-gradient(145deg, #c79a3f, var(--oro)); }
 
+.evento-media-foto {
+  background-size: cover;
+  background-position: center;
+}
+
 .evento-icono { display: inline-flex; width: 48px; height: 48px; }
 .evento-icono svg { width: 100%; height: 100%; }
 
