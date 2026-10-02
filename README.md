@@ -25,6 +25,5 @@ En `assets/js/config.js`: nombre, lema, categorías y — **importante** — el 
 - El panel no aparece en la navegación: se entra por `/panel` o manteniendo pulsado el «Bon Mos» del pie de página (doble clic en escritorio). Siempre pide la clave.
 - `api/platos.js` — CRUD de la carta (JSON en Vercel Blob; sin Blob responde la carta demo).
 - `api/foto.js` — subida de fotos a Vercel Blob (JPG/PNG/WebP, máx. 4 MB).
-- `php-version/` — la versión original PHP + SQLite, para servidor propio (XAMPP/LAMPP): `sudo bash php-version/desplegar.sh`.
 
 Las fotos de los platos de ejemplo proceden de Wikimedia Commons; atribución en `assets/img/platos/CREDITOS.txt`.
