@@ -60,7 +60,7 @@ export async function guardarCrudo(datos) {
 
 function ordenar(platos) {
   return platos.slice().sort(function (a, b) {
-    return (b.destacada - a.destacada) || String(b.creada_en || '').localeCompare(String(a.creada_en || ''));
+    return String(b.creada_en || '').localeCompare(String(a.creada_en || ''));
   });
 }
 
@@ -132,15 +132,10 @@ export default async function handler(req, res) {
         id: id || d.siguienteId,
         titulo,
         slug,
-        categoria: (b.categoria || 'principal').trim(),
+        categoria: (b.categoria || 'carnes').trim(),
         descripcion: (b.descripcion || '').trim(),
         ingredientes,
-        consejo: (b.consejo || '').trim(),
-        notas: (b.notas || '').trim(),
-        tiempo_min: Math.max(1, parseInt(b.tiempo_min, 10) || 60),
-        comensales: Math.max(1, parseInt(b.comensales, 10) || 4),
         foto: (b.foto || '').trim(),
-        destacada: b.destacada ? 1 : 0,
       };
       if (id) {
         const i = d.platos.findIndex(function (p) { return p.id === id; });

@@ -139,7 +139,7 @@
     document.body.appendChild(hoja);
     document.body.classList.add('hoja-abierta');
 
-    var fotoOrigen = origen && origen.querySelector('.tarjeta-foto, .hero-foto');
+    var fotoOrigen = origen && origen.querySelector('.tarjeta-foto');
     if (!reduce && fotoOrigen && fotoOrigen.getBoundingClientRect().height > 0) {
       var a = fotoOrigen.getBoundingClientRect();
       hoja.style.transition = 'none';
@@ -193,10 +193,8 @@
 
   // Tarjeta de la carta: solo foto y nombre. Al pulsar se abre la hoja con los ingredientes.
   function tarjeta(p) {
-    var t = h('a', { class: 'tarjeta tarjeta-plato' + (p.destacada ? ' tarjeta-destacada' : ''), href: '/plato/' + p.slug }, [
-      h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "')" }, [
-        p.destacada ? h('span', { class: 'tarjeta-especialidad', texto: 'Especialidad de la casa' }) : null,
-      ]),
+    var t = h('a', { class: 'tarjeta tarjeta-plato', href: '/plato/' + p.slug }, [
+      h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "')" }),
       h('div', { class: 'tarjeta-cuerpo' }, [
         h('h2', { texto: p.titulo }),
       ]),
@@ -205,13 +203,21 @@
     return t;
   }
 
+  // Un chorro de confeti dopamínico desde un punto
+  function fiesta(x, y) {
+    if (reduce) { return; }
+    confeti(x, y);
+    confeti(x, y);
+    if (navigator.vibrate) { navigator.vibrate([12, 30, 18]); }
+  }
+
   // Inicio: portada a pantalla completa (slogan + contacto + flecha),
-  // y debajo la especialidad de la casa y la rejilla de platos.
+  // y debajo la rejilla de platos.
   function renderInicio(d) {
     var platos = d.platos;
     app.textContent = '';
 
-    var flecha = h('a', { class: 'portada-flecha', href: '#inicio-mas', 'aria-label': 'Ver más' });
+    var flecha = h('a', { class: 'portada-flecha', href: '#inicio-mas', 'aria-label': 'Ver los platos' });
     flecha.innerHTML = '<svg viewBox="0 0 32 20" width="34" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4l13 12L29 4"/></svg>';
     var portada = h('section', { class: 'portada', estilo: "background-image:url('/assets/img/chef.webp')" }, [
       h('div', { class: 'portada-contenido' }, [
@@ -221,38 +227,46 @@
       ]),
       flecha,
     ]);
+    // La foto no cambia de tamaño al scrollear en móvil: fijamos su altura en
+    // píxeles al cargar (no reacciona al mostrar/ocultar la barra del navegador).
+    var anchoPrevio = window.innerWidth;
+    function fijarAltura() { portada.style.height = window.innerHeight + 'px'; }
+    fijarAltura();
+    window.addEventListener('resize', function () {
+      // Solo re-ajusta en cambios reales de ancho (rotación / redimensionar
+      // ventana), no cuando el móvil solo cambia el alto al scrollear.
+      if (window.innerWidth !== anchoPrevio) { anchoPrevio = window.innerWidth; fijarAltura(); }
+    });
+    window.addEventListener('orientationchange', function () {
+      setTimeout(function () { anchoPrevio = window.innerWidth; fijarAltura(); }, 120);
+    });
+
+    // Flecha dopamínica: confeti, vibración, latido y bajada suave.
     flecha.addEventListener('click', function (ev) {
       ev.preventDefault();
+      var r = flecha.getBoundingClientRect();
+      fiesta(r.left + r.width / 2, r.top + r.height / 2);
+      flecha.classList.remove('late');
+      void flecha.offsetWidth;
+      flecha.classList.add('late');
+      setTimeout(function () { flecha.classList.remove('late'); }, 650);
       var destino = document.getElementById('inicio-mas');
       if (destino) { destino.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
     });
     app.appendChild(portada);
 
     var mas = h('section', { id: 'inicio-mas', class: 'inicio-mas' });
-
-    var destacada = platos.find(function (p) { return p.destacada; }) || platos[0];
-    if (destacada) {
-      var heroTarjeta = h('a', { class: 'hero-tarjeta', href: '/plato/' + destacada.slug }, [
-        h('div', { class: 'hero-foto', estilo: "background-image:url('" + destacada.foto + "')" }),
-        h('div', { class: 'hero-texto' }, [
-          h('span', { class: 'sobre-titulo', texto: 'Especialidad de la casa' }),
-          h('h2', { texto: destacada.titulo }),
-          h('p', { class: 'prosa', texto: destacada.descripcion }),
-          h('span', { class: 'hero-cta', texto: 'Ver el plato' }),
-        ]),
-      ]);
-      heroTarjeta.addEventListener('click', function (ev) { ev.preventDefault(); abrirHoja(destacada, heroTarjeta); });
-      mas.appendChild(h('section', { class: 'hero' }, [heroTarjeta]));
-      revelar([heroTarjeta]);
-    }
-
+    mas.appendChild(h('header', { class: 'receta-cabecera' }, [
+      h('span', { class: 'sobre-titulo', texto: 'Bon Mos' }),
+      h('h2', { class: 'inicio-titulo', texto: 'Platos que cocino para ti' }),
+    ]));
     mas.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
     var rejilla = h('section', { class: 'rejilla' });
-    platos.forEach(function (p) {
-      if (destacada && p.id === destacada.id) { return; }
-      rejilla.appendChild(tarjeta(p));
-    });
+    platos.forEach(function (p) { rejilla.appendChild(tarjeta(p)); });
     mas.appendChild(rejilla);
+    mas.appendChild(h('p', { class: 'inicio-cta' }, [
+      h('a', { class: 'boton boton-sorpresa', href: '/carta', texto: 'Ver la carta completa' }),
+    ]));
     app.appendChild(mas);
     revelar([].slice.call(rejilla.children));
   }
@@ -319,15 +333,6 @@
     document.title = p.titulo + ' · ' + (CFG.nombre || 'Bon Mos');
     var enlaceWa = wa();
 
-    var pasosServicio = [
-      ['Eliges el menú.', ' Este plato solo, o combinado con entrantes y dulce de la carta.'],
-      ['El chef hace la compra.', ' Producto fresco del día, elegido pieza a pieza.'],
-      ['Se cocina en tu casa.', ' Tú pones la mesa y la compañía; de la cocina (y de recogerla) se encarga él.'],
-    ];
-    var servicio = h('ol', { class: 'lista-pasos lista-servicio' }, pasosServicio.map(function (par) {
-      return h('li', {}, [h('strong', { texto: par[0] }), document.createTextNode(par[1])]);
-    }));
-
     app.appendChild(h('article', { class: 'receta' }, [
       h('div', { class: 'receta-foto', estilo: "background-image:url('" + p.foto + "')" }),
       h('header', { class: 'receta-cabecera' }, [
@@ -342,15 +347,6 @@
         h('h2', { texto: 'Ingredientes' }),
         ulIngredientes(p),
       ]) : null,
-      h('section', { class: 'panel panel-pasos panel-servicio' }, [
-        h('h2', { texto: 'Así funciona' }),
-        servicio,
-        h('div', { class: 'reserva-panel' }, [
-          h('p', { class: 'prosa', texto: '¿Te lo imaginas ya en tu mesa?' }),
-          h('a', { class: 'boton boton-sorpresa', href: enlaceWa, target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
-          h('a', { class: 'boton boton-suave', href: 'mailto:' + CFG.email + '?subject=' + encodeURIComponent('Reserva: ' + p.titulo), texto: 'O por correo' }),
-        ]),
-      ]),
       h('p', { class: 'volver' }, [h('a', { href: '/carta', texto: 'Volver a la carta' })]),
     ]));
   }
@@ -486,7 +482,7 @@
       listaEl.appendChild(h('li', {}, [
         h('div', { class: 'admin-item-info' }, [
           h('strong', { texto: p.titulo }),
-          h('span', { texto: catNombre(p.categoria) + (p.destacada ? ' · ★ especialidad de la casa' : '') }),
+          h('span', { texto: catNombre(p.categoria) }),
         ]),
         h('div', { class: 'admin-item-botones' }, [
           h('a', { class: 'boton boton-suave', href: '/plato/' + p.slug, texto: 'Ver' }),
@@ -513,7 +509,7 @@
     }
 
     function abreFormulario(p) {
-      p = p || { titulo: '', categoria: 'carnes', descripcion: '', ingredientes: '', foto: '', destacada: 0, id: 0 };
+      p = p || { titulo: '', categoria: 'carnes', descripcion: '', ingredientes: '', foto: '', id: 0 };
       var viejo = app.querySelector('.panel-editar');
       if (viejo) { viejo.remove(); }
 
@@ -526,8 +522,6 @@
       var fIngredientes = h('textarea', { rows: '3', placeholder: 'Pimiento rojo asado, bacalao, ajo, aceite de oliva…', texto: p.ingredientes });
       var fDesc = h('textarea', { rows: '3', placeholder: 'Dos o tres frases que abran el apetito…', texto: p.descripcion });
       var fFoto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
-      var fDestacada = h('input', { type: 'checkbox' });
-      if (p.destacada) { fDestacada.checked = true; }
 
       var form = h('form', { class: 'formulario', onsubmit: function (ev) {
         ev.preventDefault();
@@ -541,7 +535,7 @@
         listo.then(function (urlFoto) {
           return llamarApi('POST', '/api/platos', JSON.stringify({
             id: p.id, titulo: fTitulo.value, categoria: fCategoria.value, descripcion: fDesc.value,
-            ingredientes: fIngredientes.value, foto: urlFoto, destacada: fDestacada.checked,
+            ingredientes: fIngredientes.value, foto: urlFoto,
           }), 'application/json');
         }).then(function (j) {
           var r = boton.getBoundingClientRect();
@@ -559,7 +553,6 @@
         h('div', { class: 'fila-doble' }, [campo('Categoría', fCategoria), campo('Foto del plato', fFoto, 'JPG, PNG o WebP')]),
         campo('Ingredientes', fIngredientes, 'sin cantidades, separados por comas'),
         campo('Descripción apetitosa', fDesc),
-        h('label', { class: 'casilla' }, [fDestacada, document.createTextNode(' Especialidad de la casa (destacada en portada)')]),
         h('div', { class: 'botonera' }, [
           h('button', { type: 'submit', class: 'boton', texto: 'Guardar plato' }),
           h('a', { class: 'boton boton-suave', href: '#', texto: 'Cancelar', onclick: function (ev) { ev.preventDefault(); form.parentElement.remove(); } }),
