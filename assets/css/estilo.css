@@ -22,6 +22,8 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html {
+  /* La web es solo modo claro: evita que el navegador/SO la oscurezca */
+  color-scheme: light only;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   font-size: 106.25%;
@@ -196,6 +198,11 @@ img { max-width: 100%; }
 @media (min-width: 900px) {
   .nav-escritorio { display: flex; }
   .hamburguesa { display: none; }
+  /* En portátil/escritorio la cabecera ocupa mucho más ancho de pantalla */
+  .cabecera {
+    width: min(1600px, calc(100% - 2rem));
+    padding: 0.6rem 1.4rem 0.6rem 1rem;
+  }
 }
 
 /* Panel del menú: cristal colgando de la píldora (fijo y fuera de la
@@ -263,6 +270,98 @@ img { max-width: 100%; }
   flex: 1;
 }
 
+/* ---------- Portada del inicio (a pantalla completa) ---------- */
+.portada {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 82vh;
+  padding: 3rem 1.4rem 4.5rem;
+  border-radius: var(--radio);
+  overflow: hidden;
+  background-size: cover;
+  background-position: center 22%;
+  color: var(--crema-clara);
+  /* a sangre: rompe el ancho del contenedor con padding */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: -1.25rem;
+  margin-bottom: 2.2rem;
+}
+
+.portada::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(32, 24, 18, 0.28) 0%, rgba(32, 24, 18, 0.5) 55%, rgba(32, 24, 18, 0.72) 100%);
+}
+
+.portada-contenido {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  max-width: 20ch;
+}
+
+.portada-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(247, 239, 221, 0.85);
+  margin-bottom: 0.4rem;
+}
+
+.portada-slogan {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  line-height: 1.12;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4);
+}
+
+.portada-boton { margin-top: 1.7rem; }
+
+.portada-flecha {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 50%;
+  color: var(--crema-clara);
+  border: 1px solid rgba(247, 239, 221, 0.4);
+  background: rgba(32, 24, 18, 0.25);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: portada-bote 1.9s ease-in-out infinite;
+}
+
+.portada-flecha:hover { background: rgba(32, 24, 18, 0.45); }
+
+@keyframes portada-bote {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portada-flecha { animation: none; }
+}
+
+.inicio-mas { scroll-margin-top: 90px; display: block; }
+
 /* ---------- Hero ---------- */
 .hero { margin: 0.5rem 0 1.5rem; }
 
@@ -292,7 +391,7 @@ img { max-width: 100%; }
 
 .hero-texto { padding: 1.4rem 1.4rem 1.6rem; }
 
-.hero-texto h1 { font-size: 2rem; margin: 0.55rem 0 0.5rem; }
+.hero-texto h1, .hero-texto h2 { font-size: 2rem; font-weight: 700; margin: 0.55rem 0 0.5rem; }
 
 .hero-cta {
   display: inline-block;
@@ -1232,6 +1331,17 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
 /* ---------- Móvil: afinado, con letra generosa ---------- */
 @media (max-width: 640px) {
   html { font-size: 112.5%; }
+  /* Inicio: la portada ocupa toda la pantalla, con la cabecera flotando encima */
+  body[data-pagina="inicio"] .cabecera { position: fixed; left: 0; right: 0; }
+  body[data-pagina="inicio"] .contenido { padding-top: 0; }
+  body[data-pagina="inicio"] .portada {
+    min-height: 100vh;
+    min-height: 100svh;
+    margin-top: 0;
+    border-radius: 0;
+    padding: 2rem 1.3rem 4.5rem;
+  }
+  .portada-slogan { font-size: clamp(2rem, 7vw, 2.8rem); }
   .cabecera {
     padding: 0.75rem 0.65rem 0.75rem 0.6rem;
     gap: 0.6rem;
@@ -1246,7 +1356,7 @@ body.hoja-abierta .contenido { transform: scale(0.965); }
   .contenido { padding: 1rem 0.85rem 2.2rem; }
   body { line-height: 1.7; }
   .hero-texto { padding: 1.15rem 1.15rem 1.35rem; }
-  .hero-texto h1 { font-size: 1.9rem; }
+  .hero-texto h1, .hero-texto h2 { font-size: 1.9rem; }
   .hero-foto { height: 210px; }
   .prosa { font-size: 1.22rem; }
   .rejilla { gap: 0.95rem; }

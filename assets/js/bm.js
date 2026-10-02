@@ -205,10 +205,30 @@
     return t;
   }
 
-  // Portada: plato de la casa y rejilla, sin buscador ni filtros
+  // Inicio: portada a pantalla completa (slogan + contacto + flecha),
+  // y debajo la especialidad de la casa y la rejilla de platos.
   function renderInicio(d) {
     var platos = d.platos;
     app.textContent = '';
+
+    var flecha = h('a', { class: 'portada-flecha', href: '#inicio-mas', 'aria-label': 'Ver más' });
+    flecha.innerHTML = '<svg viewBox="0 0 32 20" width="34" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4l13 12L29 4"/></svg>';
+    var portada = h('section', { class: 'portada', estilo: "background-image:url('/assets/img/chef.webp')" }, [
+      h('div', { class: 'portada-contenido' }, [
+        h('span', { class: 'portada-eyebrow', texto: 'Chef privado a domicilio' }),
+        h('h1', { class: 'portada-slogan', texto: 'Tú eliges lo que quieres comer. Nosotros nos encargamos del resto.' }),
+        h('a', { class: 'boton boton-sorpresa portada-boton', href: '/contacto', texto: 'Contáctanos' }),
+      ]),
+      flecha,
+    ]);
+    flecha.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      var destino = document.getElementById('inicio-mas');
+      if (destino) { destino.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
+    });
+    app.appendChild(portada);
+
+    var mas = h('section', { id: 'inicio-mas', class: 'inicio-mas' });
 
     var destacada = platos.find(function (p) { return p.destacada; }) || platos[0];
     if (destacada) {
@@ -216,23 +236,24 @@
         h('div', { class: 'hero-foto', estilo: "background-image:url('" + destacada.foto + "')" }),
         h('div', { class: 'hero-texto' }, [
           h('span', { class: 'sobre-titulo', texto: 'Especialidad de la casa' }),
-          h('h1', { texto: destacada.titulo }),
+          h('h2', { texto: destacada.titulo }),
           h('p', { class: 'prosa', texto: destacada.descripcion }),
           h('span', { class: 'hero-cta', texto: 'Ver el plato' }),
         ]),
       ]);
       heroTarjeta.addEventListener('click', function (ev) { ev.preventDefault(); abrirHoja(destacada, heroTarjeta); });
-      app.appendChild(h('section', { class: 'hero' }, [heroTarjeta]));
+      mas.appendChild(h('section', { class: 'hero' }, [heroTarjeta]));
       revelar([heroTarjeta]);
     }
 
-    app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
+    mas.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
     var rejilla = h('section', { class: 'rejilla' });
     platos.forEach(function (p) {
       if (destacada && p.id === destacada.id) { return; }
       rejilla.appendChild(tarjeta(p));
     });
-    app.appendChild(rejilla);
+    mas.appendChild(rejilla);
+    app.appendChild(mas);
     revelar([].slice.call(rejilla.children));
   }
 

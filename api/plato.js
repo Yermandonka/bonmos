@@ -45,13 +45,14 @@ export default async function handler(req, res) {
 <meta property="og:locale" content="es_ES">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2b2117">
+<meta name="color-scheme" content="light">
 <link rel="icon" type="image/png" href="${esc(logo)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/estilo.css?v=18">
-<script src="/assets/js/config.js?v=18"></script>
-<script src="/assets/js/bm.js?v=18" defer></script>
+<link rel="stylesheet" href="/assets/css/estilo.css?v=19">
+<script src="/assets/js/config.js?v=19"></script>
+<script src="/assets/js/bm.js?v=19" defer></script>
 </head>
 <body data-pagina="plato">
 <header class="cabecera">
@@ -74,6 +75,7 @@ export default async function handler(req, res) {
   <p><strong>Bon Mos</strong> · Cuina de xef, a casa teua</p>
   <p class="pie-nota">Cocina valenciana de proximidad · Chef privado a domicilio</p>
 </footer>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>`;
 
