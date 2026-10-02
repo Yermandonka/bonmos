@@ -219,14 +219,23 @@
 
     var flecha = h('a', { class: 'portada-flecha', href: '#inicio-mas', 'aria-label': 'Ver los platos' });
     flecha.innerHTML = '<svg viewBox="0 0 32 20" width="34" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4l13 12L29 4"/></svg>';
-    var portada = h('section', { class: 'portada', estilo: "background-image:url('/assets/img/chef.webp')" }, [
-      h('div', { class: 'portada-contenido' }, [
-        h('span', { class: 'portada-eyebrow', texto: 'Chef privado a domicilio' }),
-        h('h1', { class: 'portada-slogan', texto: 'Tú eliges lo que quieres comer. Nosotros nos encargamos del resto.' }),
-        h('a', { class: 'boton boton-sorpresa portada-boton', href: '/contacto', texto: 'Contáctanos' }),
-      ]),
-      flecha,
-    ]);
+    var portada = h('section', { class: 'portada' });
+    // Foto o vídeo de portada: lo que haya puesto el chef en su perfil, o la foto por defecto.
+    var aj = d.ajustes || {};
+    if (aj.portadaTipo === 'video' && aj.portada) {
+      var vid = h('video', { class: 'portada-video', src: aj.portada, loop: '', playsinline: '', 'aria-hidden': 'true', preload: 'auto' });
+      vid.muted = true; vid.autoplay = true; vid.setAttribute('muted', ''); vid.setAttribute('autoplay', '');
+      portada.appendChild(vid);
+      var intento = vid.play(); if (intento && intento.catch) { intento.catch(function () {}); }
+    } else {
+      portada.style.backgroundImage = "url('" + (aj.portada || '/assets/img/chef.webp') + "')";
+    }
+    portada.appendChild(h('div', { class: 'portada-contenido' }, [
+      h('span', { class: 'portada-eyebrow', texto: 'Chef privado a domicilio' }),
+      h('h1', { class: 'portada-slogan', texto: 'Tú eliges lo que quieres comer. Nosotros nos encargamos del resto.' }),
+      h('a', { class: 'boton boton-sorpresa portada-boton', href: '/contacto', texto: 'Contáctanos' }),
+    ]));
+    portada.appendChild(flecha);
     // La foto no cambia de tamaño al scrollear en móvil: fijamos su altura en
     // píxeles al cargar (no reacciona al mostrar/ocultar la barra del navegador).
     var anchoPrevio = window.innerWidth;
@@ -265,6 +274,11 @@
       'Te dejamos la cocina limpia y organizada.',
       'Tuppers listos para comer.',
     ];
+    // Dos opciones (dentro del mismo recuadro marrón)
+    var opciones = [
+      ['Opción 1', 'Tú eliges. Nosotros cocinamos. Tú calientas.'],
+      ['Opción 2', 'Eliges lo que quieres comer. Yo me ocupo del resto.'],
+    ];
     var comoFunciona = h('section', { class: 'comofunciona' }, [
       h('h2', { class: 'comofunciona-titulo', texto: '¿Cómo funciona?' }),
       h('ol', { class: 'pasos-pildora' }, pasos.map(function (txt, i) {
@@ -273,17 +287,6 @@
           h('span', { texto: txt }),
         ]);
       })),
-    ]);
-    mas.appendChild(comoFunciona);
-
-    // Dos opciones + reserva por WhatsApp
-    var opciones = [
-      ['Opción 1', 'Tú eliges. Nosotros cocinamos. Tú calientas.'],
-      ['Opción 2', 'Eliges lo que quieres comer. Yo me ocupo del resto.'],
-    ];
-    var bloqueOpciones = h('section', { class: 'opciones' }, [
-      h('span', { class: 'sobre-titulo', texto: 'Tú decides' }),
-      h('h2', { class: 'opciones-titulo', texto: 'Dos maneras de disfrutarlo' }),
       h('div', { class: 'opciones-grid' }, opciones.map(function (op) {
         return h('div', { class: 'opcion' }, [
           h('span', { class: 'opcion-num', texto: op[0] }),
@@ -292,7 +295,7 @@
       })),
       h('a', { class: 'boton boton-sorpresa opciones-boton', href: wa(), target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
     ]);
-    mas.appendChild(bloqueOpciones);
+    mas.appendChild(comoFunciona);
 
     // Platos
     mas.appendChild(h('header', { class: 'receta-cabecera' }, [
@@ -307,12 +310,12 @@
       h('a', { class: 'boton boton-sorpresa', href: '/carta', texto: 'Ver la carta completa' }),
     ]));
     app.appendChild(mas);
-    // Entradas en cascada: título + cada píldora, y título + cada opción + botón
+    // Entrada en cascada de todo lo del recuadro marrón: título, píldoras,
+    // opciones y botón; y luego las tarjetas de platos.
     revelar([comoFunciona.querySelector('.comofunciona-titulo')]
-      .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora'))));
-    revelar([bloqueOpciones.querySelector('.opciones-titulo')]
-      .concat([].slice.call(bloqueOpciones.querySelectorAll('.opcion')))
-      .concat([bloqueOpciones.querySelector('.opciones-boton')]));
+      .concat([].slice.call(comoFunciona.querySelectorAll('.paso-pildora')))
+      .concat([].slice.call(comoFunciona.querySelectorAll('.opcion')))
+      .concat([comoFunciona.querySelector('.opciones-boton')]));
     revelar([].slice.call(rejilla.children));
   }
 
@@ -397,6 +400,61 @@
   }
 
   // ---------- Panel del chef ----------
+
+  // Comprime un vídeo en el propio navegador (sin subir el original pesado):
+  // lo reescala (máx. 1280px de ancho), lo re-codifica a WebM y descarta el
+  // audio (la portada va en bucle y en silencio). Devuelve un Blob webm.
+  function comprimirVideo(archivo, onProgreso) {
+    return new Promise(function (resolve, reject) {
+      if (!('MediaRecorder' in window) || !HTMLCanvasElement.prototype.captureStream) {
+        reject(new Error('sin soporte de compresión'));
+        return;
+      }
+      var video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.src = URL.createObjectURL(archivo);
+      video.onerror = function () { reject(new Error('No se pudo leer el vídeo.')); };
+      video.onloadedmetadata = function () {
+        var MAXW = 1280, MAXDUR = 20;
+        var escala = Math.min(1, MAXW / (video.videoWidth || MAXW));
+        var w = Math.round((video.videoWidth || MAXW) * escala);
+        var hh = Math.round((video.videoHeight || 720) * escala);
+        w -= w % 2; hh -= hh % 2;
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = hh;
+        var ctx = canvas.getContext('2d');
+        var stream = canvas.captureStream(30);
+        var mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
+          : MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8'
+          : 'video/webm';
+        var rec;
+        try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2500000 }); }
+        catch (e) { reject(e); return; }
+        var trozos = [];
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) { trozos.push(e.data); } };
+        rec.onstop = function () {
+          URL.revokeObjectURL(video.src);
+          resolve(new Blob(trozos, { type: 'video/webm' }));
+        };
+        var dibujando = true;
+        function pinta() {
+          if (!dibujando) { return; }
+          ctx.drawImage(video, 0, 0, w, hh);
+          var dur = Math.min(video.duration || MAXDUR, MAXDUR);
+          if (onProgreso && dur) { onProgreso(Math.min(1, video.currentTime / dur)); }
+          requestAnimationFrame(pinta);
+        }
+        function terminar() { if (dibujando) { dibujando = false; try { rec.stop(); } catch (e) {} } }
+        video.onended = terminar;
+        video.ontimeupdate = function () { if (video.currentTime >= MAXDUR) { video.pause(); terminar(); } };
+        rec.start(200);
+        var p = video.play();
+        if (p && p.then) { p.then(function () { pinta(); }).catch(function () { pinta(); }); }
+        else { pinta(); }
+      };
+    });
+  }
 
   function clave() { return sessionStorage.getItem('bm_clave') || ''; }
 
@@ -518,6 +576,73 @@
         (d.ajustes && d.ajustes.logo) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Restaurar el original', onclick: function (ev) {
           ev.preventDefault();
           guardarLogo('');
+        } }) : null,
+      ]),
+    ]));
+
+    // Portada del inicio: foto o vídeo editable
+    var vistaPortada = h('div', { class: 'perfil-portada-vista' });
+    function pintaVistaPortada(url, tipo) {
+      vistaPortada.textContent = '';
+      if (tipo === 'video' && url) {
+        var v = h('video', { src: url, loop: '', playsinline: '' });
+        v.muted = true; v.autoplay = true; v.setAttribute('muted', ''); v.setAttribute('autoplay', '');
+        vistaPortada.appendChild(v);
+        var pp = v.play(); if (pp && pp.catch) { pp.catch(function () {}); }
+      } else {
+        vistaPortada.appendChild(h('div', { class: 'perfil-portada-img', estilo: "background-image:url('" + (url || '/assets/img/chef.webp') + "')" }));
+      }
+    }
+    pintaVistaPortada((d.ajustes && d.ajustes.portada) || '', (d.ajustes && d.ajustes.portadaTipo) || '');
+
+    var fPortada = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime', 'aria-label': 'Nueva portada' });
+    var estadoPortada = h('small', { class: 'perfil-estado', estilo: 'display:none' });
+    function estadoPort(txt) {
+      estadoPortada.textContent = txt || '';
+      estadoPortada.style.display = txt ? '' : 'none';
+    }
+    function guardarPortada(url, tipo) {
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ portada: url, portadaTipo: tipo }), 'application/json').then(function (j) {
+        cachePlatos = null;
+        pintaVistaPortada(j.portada, j.portadaTipo);
+        avisa(j.portada ? 'Portada actualizada.' : 'Portada restaurada a la foto por defecto.');
+      }).catch(function (e) { avisa(e.message, true); });
+    }
+    fPortada.addEventListener('change', function () {
+      var archivo = fPortada.files[0];
+      if (!archivo) { return; }
+      var esVideo = /^video\//.test(archivo.type);
+      function subir(blob, mime) {
+        estadoPort('Subiendo…');
+        return llamarApi('POST', '/api/foto', blob, mime).then(function (j) { return guardarPortada(j.url, j.tipo); });
+      }
+      var preparar;
+      if (esVideo) {
+        estadoPort('Comprimiendo el vídeo… 0%');
+        preparar = comprimirVideo(archivo, function (p) { estadoPort('Comprimiendo el vídeo… ' + Math.round(p * 100) + '%'); })
+          .then(function (blob) { return { blob: blob, mime: 'video/webm' }; })
+          .catch(function () { estadoPort('Subiendo el vídeo original…'); return { blob: archivo, mime: archivo.type || 'video/mp4' }; });
+      } else {
+        preparar = Promise.resolve({ blob: archivo, mime: archivo.type });
+      }
+      preparar
+        .then(function (r) { return subir(r.blob, r.mime); })
+        .catch(function (e) { avisa(e.message, true); })
+        .then(function () { fPortada.value = ''; estadoPort(''); });
+    });
+    seccion.appendChild(h('section', { class: 'panel perfil-chef perfil-portada' }, [
+      vistaPortada,
+      h('div', { class: 'perfil-campos' }, [
+        h('strong', { texto: 'Portada del inicio' }),
+        h('label', { class: 'perfil-subir' }, [
+          document.createTextNode('Cambiar foto o vídeo '),
+          h('small', { texto: '(foto JPG/PNG/WebP o vídeo MP4/WebM; el vídeo se comprime solo, máx. 20 s)' }),
+          fPortada,
+        ]),
+        estadoPortada,
+        (d.ajustes && d.ajustes.portada) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Quitar y usar la foto por defecto', onclick: function (ev) {
+          ev.preventDefault();
+          guardarPortada('', '');
         } }) : null,
       ]),
     ]));

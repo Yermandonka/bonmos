@@ -310,16 +310,28 @@ img { max-width: 100%; }
 body[data-pagina="inicio"] .cabecera { position: fixed; left: 0; right: 0; }
 body[data-pagina="inicio"] .contenido { padding-top: 0; }
 
+/* Vídeo de portada (si el chef lo ha puesto): capa de fondo a pantalla completa */
+.portada-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .portada::before {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(rgba(32, 24, 18, 0.28) 0%, rgba(32, 24, 18, 0.5) 55%, rgba(32, 24, 18, 0.72) 100%);
 }
 
 .portada-contenido {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -367,7 +379,7 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   left: 50%;
   bottom: 1.5rem;
   transform: translateX(-50%);
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -446,8 +458,7 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   margin-bottom: 1.3rem;
 }
 
-.comofunciona-titulo::after,
-.opciones-titulo::after {
+.comofunciona-titulo::after {
   content: '';
   display: block;
   width: 3rem;
@@ -498,30 +509,32 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   font-size: 1.2rem;
 }
 
-/* ---------- Dos opciones + reserva (inicio) ---------- */
-.opciones {
-  max-width: 680px;
-  margin: 0 auto 1rem;
-  text-align: center;
+/* ---------- Dos opciones + reserva (dentro del recuadro marrón) ---------- */
+.opciones-boton {
+  display: block;
+  width: -moz-fit-content;
+  width: fit-content;
+  margin: 1.5rem auto 0;
+  padding: 0.85rem 2.1rem;
+  font-size: 0.9rem;
 }
-
-.opciones-titulo { font-size: 1.8rem; margin-top: 0.1rem; }
-
-.opciones-boton { padding: 0.85rem 2.1rem; font-size: 0.9rem; }
 
 .opciones-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
-  margin: 1.1rem 0 1.5rem;
+  margin: 1.4rem 0 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(247, 239, 221, 0.18);
 }
 
 .opcion {
-  background: var(--papel);
-  border: 1px solid var(--filete);
+  background: var(--crema-clara);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radio);
   padding: 1.3rem 1.2rem;
-  box-shadow: var(--sombra);
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 .opcion-num {
@@ -1066,6 +1079,32 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
 .perfil-subir small { color: var(--texto-suave); }
 
 .perfil-restaurar { font-size: 0.85rem; color: var(--naranja-oscuro); text-decoration: underline; }
+
+/* Vista previa de la portada en el panel (foto o vídeo) */
+.perfil-portada-vista {
+  width: 128px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--sombra);
+  background: var(--crema);
+}
+
+.perfil-portada-vista video,
+.perfil-portada-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background-size: cover;
+  background-position: center;
+}
+
+.perfil-estado {
+  color: var(--cobalto);
+  font-weight: 500;
+}
 
 .admin-lista { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
 
