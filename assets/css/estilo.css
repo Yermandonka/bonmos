@@ -120,6 +120,7 @@ img { max-width: 100%; }
   width: 52px;
   height: 52px;
   border-radius: 50%;
+  object-fit: cover;
   box-shadow: 0 0 0 2px rgba(247, 239, 221, 0.25), var(--sombra);
   flex-shrink: 0;
   position: relative;
@@ -454,16 +455,9 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   padding: 2.1rem 1.5rem 2.3rem;
   border-radius: 26px;
   color: var(--crema-clara);
-  background-color: #3a2a1b;
-  background-image:
-    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='140'%20height='140'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'%20opacity='0.05'/%3E%3C/svg%3E"),
-    radial-gradient(120% 90% at 0% 0%, rgba(217, 122, 42, 0.42) 0%, rgba(217, 122, 42, 0) 55%),
-    radial-gradient(120% 90% at 100% 0%, rgba(165, 129, 60, 0.32) 0%, rgba(165, 129, 60, 0) 55%),
-    radial-gradient(150% 130% at 50% 135%, rgba(38, 71, 107, 0.3) 0%, rgba(38, 71, 107, 0) 55%),
-    linear-gradient(160deg, #4e3a28 0%, #241a11 100%);
-  background-size: 140px 140px, auto, auto, auto, auto;
-  border: 1px solid rgba(238, 181, 47, 0.18);
-  box-shadow: 0 26px 60px rgba(28, 20, 12, 0.34), inset 0 1px 0 rgba(255, 250, 240, 0.14);
+  background: #3b2b1c;
+  border: 1px solid rgba(238, 181, 47, 0.14);
+  box-shadow: 0 22px 50px rgba(28, 20, 12, 0.3), inset 0 1px 0 rgba(255, 250, 240, 0.1);
   overflow: hidden;
 }
 
@@ -496,7 +490,7 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   display: flex;
   align-items: center;
   gap: 0.95rem;
-  background: linear-gradient(180deg, #fbf5e8, var(--crema-clara));
+  background: var(--crema-clara);
   color: var(--tinta);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 999px;
@@ -517,7 +511,7 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   width: 2.3rem;
   height: 2.3rem;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 28%, #dd7f2e 0%, var(--naranja-oscuro) 75%);
+  background: var(--naranja-oscuro);
   color: #fff;
   display: flex;
   align-items: center;
@@ -644,6 +638,22 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+
+/* ---------- Próximamente (servicios) ---------- */
+.proximamente {
+  text-align: center;
+  max-width: 540px;
+  margin: 3.5rem auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.proximamente-titulo {
+  font-size: clamp(2.4rem, 7vw, 3.4rem);
+  margin: 1rem 0 0.8rem;
+  color: var(--tinta);
+}
+
+.proximamente .prosa { margin: 0 auto; }
 
 /* ---------- Detalles editoriales ---------- */
 .sobre-titulo {
@@ -1133,6 +1143,48 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
   font-weight: 500;
 }
 
+/* Reencuadre: arrastrar la foto/vídeo para centrarla */
+.encuadrable { cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none; }
+.encuadrable.arrastrando { cursor: grabbing; }
+
+.perfil-portada-vista.encuadrable,
+.perfil-logo.encuadrable,
+.form-foto-vista.encuadrable { position: relative; }
+
+.encuadre-hint {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.encuadre-centrar {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--cobalto);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.form-foto-encuadre { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.form-foto-vista {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--crema);
+  border: 1px solid var(--filete);
+  box-shadow: var(--sombra);
+}
+
 .admin-lista { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
 
 .admin-lista li {
@@ -1347,6 +1399,8 @@ body[data-pagina="inicio"] .contenido { padding-top: 0; }
     radial-gradient(130% 150% at 100% 100%, rgba(70, 52, 24, 0.55) 0%, rgba(70, 52, 24, 0) 60%),
     linear-gradient(150deg, #c79a3f, var(--oro));
 }
+
+.evento-media-foto { background-size: cover; background-position: center; }
 
 .evento-icono { display: inline-flex; width: 48px; height: 48px; }
 .evento-icono svg { width: 100%; height: 100%; }

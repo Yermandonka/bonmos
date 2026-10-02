@@ -128,6 +128,8 @@ export default async function handler(req, res) {
       if (d.platos.some(function (p) { return p.slug === slug && p.id !== id; })) {
         slug += '-' + Math.random().toString(36).slice(2, 6);
       }
+      const fotoPos = /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(String(b.foto_pos || '').trim())
+        ? String(b.foto_pos).trim() : '50% 50%';
       const plato = {
         id: id || d.siguienteId,
         titulo,
@@ -136,6 +138,7 @@ export default async function handler(req, res) {
         descripcion: (b.descripcion || '').trim(),
         ingredientes,
         foto: (b.foto || '').trim(),
+        foto_pos: fotoPos,
       };
       if (id) {
         const i = d.platos.findIndex(function (p) { return p.id === id; });

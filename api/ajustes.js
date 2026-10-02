@@ -5,6 +5,11 @@ function urlValida(v) {
   return v === '' || /^https:\/\//.test(v);
 }
 
+// Punto focal "x% y%" para encuadrar (background-position / object-position)
+function posValida(v) {
+  return /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(String(v || '').trim());
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -23,6 +28,9 @@ export default async function handler(req, res) {
       }
       d.ajustes.logo = logo;
     }
+    if (b.logoPos !== undefined) {
+      d.ajustes.logoPos = posValida(b.logoPos) ? String(b.logoPos).trim() : '50% 50%';
+    }
 
     // Portada del inicio (foto o vídeo)
     if (b.portada !== undefined) {
@@ -34,13 +42,32 @@ export default async function handler(req, res) {
       const tipo = String(b.portadaTipo || '').trim();
       d.ajustes.portadaTipo = (tipo === 'video' || tipo === 'image') ? tipo : '';
     }
+    if (b.portadaPos !== undefined) {
+      d.ajustes.portadaPos = posValida(b.portadaPos) ? String(b.portadaPos).trim() : '50% 50%';
+    }
+
+    // Foto de la página de contacto
+    if (b.contacto !== undefined) {
+      const contacto = String(b.contacto || '').trim();
+      if (!urlValida(contacto)) {
+        return res.status(400).json({ error: 'La foto de contacto debe ser una URL https válida.' });
+      }
+      d.ajustes.contacto = contacto;
+    }
+    if (b.contactoPos !== undefined) {
+      d.ajustes.contactoPos = posValida(b.contactoPos) ? String(b.contactoPos).trim() : '50% 50%';
+    }
 
     await guardarCrudo(d);
     return res.status(200).json({
       ok: true,
       logo: d.ajustes.logo || '',
+      logoPos: d.ajustes.logoPos || '',
       portada: d.ajustes.portada || '',
       portadaTipo: d.ajustes.portadaTipo || '',
+      portadaPos: d.ajustes.portadaPos || '',
+      contacto: d.ajustes.contacto || '',
+      contactoPos: d.ajustes.contactoPos || '',
     });
   } catch (err) {
     console.error(err);

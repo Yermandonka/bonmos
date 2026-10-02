@@ -51,12 +51,21 @@
     return n.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
   }
 
+  // Punto focal para encuadrar (background-position / object-position)
+  function foco(obj, clave) { return (obj && obj[clave]) || '50% 50%'; }
+
   function aplicarLogo(d) {
-    var url = (d.ajustes && d.ajustes.logo) || '';
-    if (!url) { return; }
-    [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.src = url; });
-    var fav = document.querySelector('link[rel="icon"]');
-    if (fav) { fav.href = url; }
+    var aj = d.ajustes || {};
+    var url = aj.logo || '';
+    var lp = foco(aj, 'logoPos');
+    [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) {
+      if (url) { i.src = url; }
+      i.style.objectPosition = lp;
+    });
+    if (url) {
+      var fav = document.querySelector('link[rel="icon"]');
+      if (fav) { fav.href = url; }
+    }
   }
 
   var cachePlatos = null;
@@ -120,7 +129,7 @@
     cerrarHoja();
     var href = '/plato/' + p.slug;
     fondo = h('div', { class: 'hoja-fondo', onclick: cerrarHoja });
-    var fotoHoja = h('div', { class: 'hoja-foto', estilo: "background-image:url('" + p.foto + "')" });
+    var fotoHoja = h('div', { class: 'hoja-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') });
     var ingr = ulIngredientes(p, 'hoja-ingredientes');
     hoja = h('div', { class: 'hoja', role: 'dialog', 'aria-label': p.titulo }, [
       h('div', { class: 'hoja-asa' }),
@@ -194,7 +203,7 @@
   // Tarjeta de la carta: solo foto y nombre. Al pulsar se abre la hoja con los ingredientes.
   function tarjeta(p) {
     var t = h('a', { class: 'tarjeta tarjeta-plato', href: '/plato/' + p.slug }, [
-      h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "')" }),
+      h('div', { class: 'tarjeta-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') }),
       h('div', { class: 'tarjeta-cuerpo' }, [
         h('h2', { texto: p.titulo }),
       ]),
@@ -222,13 +231,16 @@
     var portada = h('section', { class: 'portada' });
     // Foto o vídeo de portada: lo que haya puesto el chef en su perfil, o la foto por defecto.
     var aj = d.ajustes || {};
+    var portadaPos = aj.portada ? foco(aj, 'portadaPos') : '50% 18%';
     if (aj.portadaTipo === 'video' && aj.portada) {
       var vid = h('video', { class: 'portada-video', src: aj.portada, loop: '', playsinline: '', 'aria-hidden': 'true', preload: 'auto' });
       vid.muted = true; vid.autoplay = true; vid.setAttribute('muted', ''); vid.setAttribute('autoplay', '');
+      vid.style.objectPosition = portadaPos;
       portada.appendChild(vid);
       var intento = vid.play(); if (intento && intento.catch) { intento.catch(function () {}); }
     } else {
       portada.style.backgroundImage = "url('" + (aj.portada || '/assets/img/chef.webp') + "')";
+      portada.style.backgroundPosition = portadaPos;
     }
     portada.appendChild(h('div', { class: 'portada-contenido' }, [
       h('span', { class: 'portada-eyebrow', texto: 'Chef privado a domicilio' }),
@@ -374,7 +386,7 @@
     var enlaceWa = wa();
 
     app.appendChild(h('article', { class: 'receta' }, [
-      h('div', { class: 'receta-foto', estilo: "background-image:url('" + p.foto + "')" }),
+      h('div', { class: 'receta-foto', estilo: "background-image:url('" + p.foto + "');background-position:" + foco(p, 'foto_pos') }),
       h('header', { class: 'receta-cabecera' }, [
         h('span', { class: 'sobre-titulo', texto: catNombre(p.categoria) }),
         h('h1', { texto: p.titulo }),
@@ -485,6 +497,43 @@
     });
   }
 
+  // Hace un elemento "reencuadrable": arrastrar mueve el punto focal
+  // (background-position si es un div con imagen de fondo, u object-position
+  // si es <img>/<video>). onFin(x,y) se llama al soltar, para guardar.
+  function hazEncuadrable(el, esMedia, posInicial, onFin) {
+    el.classList.add('encuadrable');
+    var drag = false, sx = 0, sy = 0, bx = 50, by = 50;
+    var m = /(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/.exec(posInicial || '50% 50%');
+    var cx = m ? parseFloat(m[1]) : 50, cy = m ? parseFloat(m[2]) : 50;
+    function clamp(v) { return v < 0 ? 0 : v > 100 ? 100 : v; }
+    function aplica(x, y) {
+      if (esMedia) { el.style.objectPosition = x + '% ' + y + '%'; }
+      else { el.style.backgroundPosition = x + '% ' + y + '%'; }
+    }
+    aplica(cx, cy);
+    el.addEventListener('pointerdown', function (ev) {
+      drag = true; sx = ev.clientX; sy = ev.clientY; bx = cx; by = cy;
+      try { el.setPointerCapture(ev.pointerId); } catch (e) {}
+      el.classList.add('arrastrando');
+      ev.preventDefault();
+    });
+    el.addEventListener('pointermove', function (ev) {
+      if (!drag) { return; }
+      var r = el.getBoundingClientRect();
+      if (!r.width || !r.height) { return; }
+      cx = clamp(bx - (ev.clientX - sx) / r.width * 100);
+      cy = clamp(by - (ev.clientY - sy) / r.height * 100);
+      aplica(cx, cy);
+    });
+    function fin() { if (!drag) { return; } drag = false; el.classList.remove('arrastrando'); if (onFin) { onFin(cx + '% ' + cy + '%'); } }
+    el.addEventListener('pointerup', fin);
+    el.addEventListener('pointercancel', fin);
+    return {
+      centrar: function () { cx = 50; cy = 50; aplica(50, 50); if (onFin) { onFin('50% 50%'); } },
+      pos: function () { return cx + '% ' + cy + '%'; },
+    };
+  }
+
   function clave() { return sessionStorage.getItem('bm_clave') || ''; }
 
   function llamarApi(metodo, url, cuerpo, tipo) {
@@ -593,6 +642,12 @@
         .catch(function (e) { avisa(e.message, true); })
         .finally(function () { fLogo.value = ''; });
     });
+    var encLogo = hazEncuadrable(vistaLogo, true, (d.ajustes && d.ajustes.logoPos) || '50% 50%', function (pos) {
+      llamarApi('POST', '/api/ajustes', JSON.stringify({ logoPos: pos }), 'application/json').then(function () {
+        cachePlatos = null;
+        [].forEach.call(document.querySelectorAll('.marca-logo'), function (i) { i.style.objectPosition = pos; });
+      }).catch(function (e) { avisa(e.message, true); });
+    });
     seccion.appendChild(h('section', { class: 'panel perfil-chef' }, [
       vistaLogo,
       h('div', { class: 'perfil-campos' }, [
@@ -602,6 +657,10 @@
           h('small', { texto: '(cuadrado, se muestra en círculo)' }),
           fLogo,
         ]),
+        h('span', { class: 'encuadre-hint' }, [
+          document.createTextNode('Arrastra el logo para centrarlo · '),
+          h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { encLogo.centrar(); } }),
+        ]),
         (d.ajustes && d.ajustes.logo) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Restaurar el original', onclick: function (ev) {
           ev.preventDefault();
           guardarLogo('');
@@ -609,18 +668,30 @@
       ]),
     ]));
 
-    // Portada del inicio: foto o vídeo editable
+    // Portada del inicio: foto o vídeo editable, con reencuadre por arrastre
     var vistaPortada = h('div', { class: 'perfil-portada-vista' });
+    var portadaPosActual = (d.ajustes && d.ajustes.portadaPos) || '50% 50%';
+    var encPortada = null;
     function pintaVistaPortada(url, tipo) {
       vistaPortada.textContent = '';
+      var inner, esMedia;
       if (tipo === 'video' && url) {
-        var v = h('video', { src: url, loop: '', playsinline: '' });
-        v.muted = true; v.autoplay = true; v.setAttribute('muted', ''); v.setAttribute('autoplay', '');
-        vistaPortada.appendChild(v);
-        var pp = v.play(); if (pp && pp.catch) { pp.catch(function () {}); }
+        inner = h('video', { src: url, loop: '', playsinline: '' });
+        inner.muted = true; inner.autoplay = true; inner.setAttribute('muted', ''); inner.setAttribute('autoplay', '');
+        esMedia = true;
+        vistaPortada.appendChild(inner);
+        var pp = inner.play(); if (pp && pp.catch) { pp.catch(function () {}); }
       } else {
-        vistaPortada.appendChild(h('div', { class: 'perfil-portada-img', estilo: "background-image:url('" + (url || '/assets/img/chef.webp') + "')" }));
+        inner = h('div', { class: 'perfil-portada-img', estilo: "background-image:url('" + (url || '/assets/img/chef.webp') + "')" });
+        esMedia = false;
+        vistaPortada.appendChild(inner);
       }
+      encPortada = hazEncuadrable(inner, esMedia, portadaPosActual, function (pos) {
+        portadaPosActual = pos;
+        llamarApi('POST', '/api/ajustes', JSON.stringify({ portadaPos: pos }), 'application/json')
+          .then(function () { cachePlatos = null; })
+          .catch(function (e) { avisa(e.message, true); });
+      });
     }
     pintaVistaPortada((d.ajustes && d.ajustes.portada) || '', (d.ajustes && d.ajustes.portadaTipo) || '');
 
@@ -631,7 +702,9 @@
       estadoPortada.style.display = txt ? '' : 'none';
     }
     function guardarPortada(url, tipo) {
-      return llamarApi('POST', '/api/ajustes', JSON.stringify({ portada: url, portadaTipo: tipo }), 'application/json').then(function (j) {
+      // Nueva portada: el encuadre vuelve al centro.
+      portadaPosActual = '50% 50%';
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ portada: url, portadaTipo: tipo, portadaPos: '50% 50%' }), 'application/json').then(function (j) {
         cachePlatos = null;
         pintaVistaPortada(j.portada, j.portadaTipo);
         avisa(j.portada ? 'Portada actualizada.' : 'Portada restaurada a la foto por defecto.');
@@ -670,10 +743,70 @@
           h('small', { texto: '(foto o vídeo, también .mov del iPhone; el vídeo se comprime solo, máx. 20 s)' }),
           fPortada,
         ]),
+        h('span', { class: 'encuadre-hint' }, [
+          document.createTextNode('Arrastra la vista para centrarla · '),
+          h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { if (encPortada) { encPortada.centrar(); } } }),
+        ]),
         estadoPortada,
         (d.ajustes && d.ajustes.portada) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Quitar y usar la foto por defecto', onclick: function (ev) {
           ev.preventDefault();
           guardarPortada('', '');
+        } }) : null,
+      ]),
+    ]));
+
+    // Foto de la página de contacto (imagen, con reencuadre)
+    var vistaContacto = h('div', { class: 'perfil-portada-vista' });
+    var contactoPosActual = (d.ajustes && d.ajustes.contactoPos) || '50% 50%';
+    var encContacto = null;
+    function pintaVistaContacto(url) {
+      vistaContacto.textContent = '';
+      var inner = h('div', { class: 'perfil-portada-img', estilo: "background-image:url('" + (url || '/assets/img/chef.webp') + "')" });
+      vistaContacto.appendChild(inner);
+      encContacto = hazEncuadrable(inner, false, contactoPosActual, function (pos) {
+        contactoPosActual = pos;
+        llamarApi('POST', '/api/ajustes', JSON.stringify({ contactoPos: pos }), 'application/json')
+          .then(function () { cachePlatos = null; })
+          .catch(function (e) { avisa(e.message, true); });
+      });
+    }
+    pintaVistaContacto((d.ajustes && d.ajustes.contacto) || '');
+    var fContacto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': 'Nueva foto de contacto' });
+    var estadoContacto = h('small', { class: 'perfil-estado', estilo: 'display:none' });
+    function guardarContacto(url) {
+      contactoPosActual = '50% 50%';
+      return llamarApi('POST', '/api/ajustes', JSON.stringify({ contacto: url, contactoPos: '50% 50%' }), 'application/json').then(function (j) {
+        cachePlatos = null;
+        pintaVistaContacto(j.contacto);
+        avisa(j.contacto ? 'Foto de contacto actualizada.' : 'Foto de contacto restaurada.');
+      }).catch(function (e) { avisa(e.message, true); });
+    }
+    fContacto.addEventListener('change', function () {
+      var a = fContacto.files[0];
+      if (!a) { return; }
+      estadoContacto.textContent = 'Subiendo…'; estadoContacto.style.display = '';
+      llamarApi('POST', '/api/foto', a, a.type)
+        .then(function (j) { return guardarContacto(j.url); })
+        .catch(function (e) { avisa(e.message, true); })
+        .then(function () { fContacto.value = ''; estadoContacto.style.display = 'none'; estadoContacto.textContent = ''; });
+    });
+    seccion.appendChild(h('section', { class: 'panel perfil-chef perfil-portada' }, [
+      vistaContacto,
+      h('div', { class: 'perfil-campos' }, [
+        h('strong', { texto: 'Foto de contacto' }),
+        h('label', { class: 'perfil-subir' }, [
+          document.createTextNode('Cambiar foto '),
+          h('small', { texto: '(JPG, PNG o WebP)' }),
+          fContacto,
+        ]),
+        h('span', { class: 'encuadre-hint' }, [
+          document.createTextNode('Arrastra la vista para centrarla · '),
+          h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { if (encContacto) { encContacto.centrar(); } } }),
+        ]),
+        estadoContacto,
+        (d.ajustes && d.ajustes.contacto) ? h('a', { href: '#', class: 'perfil-restaurar', texto: 'Quitar y usar la foto por defecto', onclick: function (ev) {
+          ev.preventDefault();
+          guardarContacto('');
         } }) : null,
       ]),
     ]));
@@ -723,6 +856,15 @@
       var fIngredientes = h('textarea', { rows: '3', placeholder: 'Pimiento rojo asado, bacalao, ajo, aceite de oliva…', texto: p.ingredientes });
       var fDesc = h('textarea', { rows: '3', placeholder: 'Dos o tres frases que abran el apetito…', texto: p.descripcion });
       var fFoto = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp' });
+      var fotoPos = foco(p, 'foto_pos');
+      var fotoVista = h('div', { class: 'form-foto-vista', estilo: p.foto ? ("background-image:url('" + p.foto + "');background-position:" + fotoPos) : '' });
+      var encFoto = hazEncuadrable(fotoVista, false, fotoPos, function (pos) { fotoPos = pos; });
+      fFoto.addEventListener('change', function () {
+        var a = fFoto.files[0];
+        if (!a) { return; }
+        fotoVista.style.backgroundImage = "url('" + URL.createObjectURL(a) + "')";
+        encFoto.centrar();
+      });
 
       var form = h('form', { class: 'formulario', onsubmit: function (ev) {
         ev.preventDefault();
@@ -736,7 +878,7 @@
         listo.then(function (urlFoto) {
           return llamarApi('POST', '/api/platos', JSON.stringify({
             id: p.id, titulo: fTitulo.value, categoria: fCategoria.value, descripcion: fDesc.value,
-            ingredientes: fIngredientes.value, foto: urlFoto,
+            ingredientes: fIngredientes.value, foto: urlFoto, foto_pos: fotoPos,
           }), 'application/json');
         }).then(function (j) {
           var r = boton.getBoundingClientRect();
@@ -752,6 +894,13 @@
       } }, [
         campo('Nombre del plato', fTitulo),
         h('div', { class: 'fila-doble' }, [campo('Categoría', fCategoria), campo('Foto del plato', fFoto, 'JPG, PNG o WebP')]),
+        h('div', { class: 'form-foto-encuadre' }, [
+          fotoVista,
+          h('span', { class: 'encuadre-hint' }, [
+            document.createTextNode('Arrastra la foto para centrarla · '),
+            h('button', { type: 'button', class: 'encuadre-centrar', texto: 'Centrar', onclick: function () { encFoto.centrar(); } }),
+          ]),
+        ]),
         campo('Ingredientes', fIngredientes, 'sin cantidades, separados por comas'),
         campo('Descripción apetitosa', fDesc),
         h('div', { class: 'botonera' }, [
@@ -781,15 +930,18 @@
     return cont;
   }
 
-  function renderContacto() {
+  function renderContacto(aj) {
     app.textContent = '';
+    aj = aj || {};
+    var fotoUrl = aj.contacto || '/assets/img/chef.webp';
+    var fotoPos = foco(aj, 'contactoPos');
 
     var tarjeta = h('section', { class: 'contacto-tarjeta' }, [
-      h('div', { class: 'contacto-foto', estilo: "background-image:url('/assets/img/chef.webp')", role: 'img', 'aria-label': 'El chef de Bon Mos' }),
+      h('div', { class: 'contacto-foto', estilo: "background-image:url('" + fotoUrl + "');background-position:" + fotoPos, role: 'img', 'aria-label': 'El chef de Bon Mos' }),
       h('div', { class: 'contacto-cuerpo' }, [
         h('span', { class: 'contacto-eyebrow', texto: 'Contacto' }),
         h('h1', { class: 'contacto-titulo', texto: '¿Tienes alguna duda o quieres hacer un pedido?' }),
-        h('p', { class: 'prosa contacto-sub', texto: 'Estoy a tu disposición. Escríbeme o llámame y te ayudaré en todo lo que necesites.' }),
+        h('p', { class: 'prosa contacto-sub', texto: 'Estamos a tu disposición. Escríbenos o llámanos y te ayudaremos en todo lo que necesites.' }),
         h('a', { class: 'contacto-pildora contacto-wa', href: wa(), target: '_blank', rel: 'noopener' }, [
           svgIcono('whatsapp'),
           h('span', { class: 'contacto-dato', texto: waMostrar() }),
@@ -823,32 +975,40 @@
 
   var EVENTOS = [
     { icono: 'paella', titulo: 'Paella en el chalet', texto: 'Paella tradicional cocinada en tu jardín o terraza. Sabor auténtico y el ambiente de siempre, con leña si se puede.' },
-    { icono: 'cena', titulo: 'Cena romántica para dos', texto: 'Una cena íntima, elegante y pensada solo para vosotros. Yo cocino, sirvo y recojo; vosotros solo disfrutáis.' },
+    { icono: 'cena', titulo: 'Cena romántica para dos', texto: 'Una cena íntima, elegante y pensada solo para vosotros. Cocinamos, servimos y recogemos; vosotros solo disfrutáis.' },
     { icono: 'grupo', titulo: 'Comida o cena de grupo', texto: 'Para familias o amigos. Platos para compartir, ambiente relajado y atención personalizada en tu casa.' },
     { icono: 'aniversario', titulo: 'Aniversario en privado', texto: 'Celebrad lo vuestro en la intimidad de vuestro hogar. Mesa decorada y menú a medida, sin presencia de personal.' },
-    { icono: 'barbacoa', titulo: 'Barbacoa en casa', texto: 'Barbacoa clásica o de autor, preparada y servida en tu terraza. Tú disfrutas, yo me encargo del resto.' },
-    { icono: 'lista', titulo: 'Catering listo en tu cocina', texto: 'Preparo todo en tu casa y lo dejo cocinado y decorado para que solo tengas que servir. Sin personal, sin estrés.' },
+    { icono: 'barbacoa', titulo: 'Barbacoa en casa', texto: 'Barbacoa clásica o de autor, preparada y servida en tu terraza. Tú disfrutas, nosotros nos encargamos del resto.' },
+    { icono: 'lista', titulo: 'Catering listo en tu cocina', texto: 'Preparamos todo en tu casa y lo dejamos cocinado y decorado para que solo tengas que servir. Sin personal, sin estrés.' },
   ];
 
   function renderEventos(platos) {
     app.textContent = '';
     app.appendChild(h('header', { class: 'receta-cabecera' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos · Eventos' }),
-      h('h1', { texto: 'Cocino en tu casa' }),
-      h('p', { class: 'prosa receta-descripcion', texto: 'Elige el plan y yo me ocupo de todo: la compra, la cocina y la recogida. Tú pones la mesa y la compañía.' }),
+      h('h1', { texto: 'Cocinamos en tu casa' }),
+      h('p', { class: 'prosa receta-descripcion', texto: 'Elige el plan y nosotros nos ocupamos de todo: la compra, la cocina y la recogida. Tú pones la mesa y la compañía.' }),
     ]));
     app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
 
-    // Cada servicio con su ficha de marca: fondo degradado + icono (siempre
-    // elegante y consistente, sin depender de la calidad de fotos sueltas).
+    // Cada servicio usa una foto de plato ya subida (con su punto focal); si
+    // aún no hay fotos, se usa el icono de marca como respaldo.
+    var conFoto = (platos || []).filter(function (p) { return p.foto; });
     var lista = h('div', { class: 'eventos' });
     EVENTOS.forEach(function (ev, i) {
       var media = h('div', { class: 'evento-media' }, [
         h('span', { class: 'evento-num', texto: String(i + 1) }),
       ]);
-      var ic = h('span', { class: 'evento-icono' });
-      ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
-      media.appendChild(ic);
+      var pf = conFoto.length ? conFoto[i % conFoto.length] : null;
+      if (pf) {
+        media.classList.add('evento-media-foto');
+        media.style.backgroundImage = "url('" + pf.foto + "')";
+        media.style.backgroundPosition = foco(pf, 'foto_pos');
+      } else {
+        var ic = h('span', { class: 'evento-icono' });
+        ic.innerHTML = ICONOS_EVENTO[ev.icono] || ICONOS_EVENTO.corazon;
+        media.appendChild(ic);
+      }
       lista.appendChild(h('article', { class: 'evento' }, [
         media,
         h('div', { class: 'evento-cuerpo' }, [
@@ -864,8 +1024,8 @@
     app.appendChild(h('section', { class: 'eventos-cta' }, [
       h('span', { class: 'evento-icono eventos-cta-icono' }),
       h('h2', { texto: '¿Tienes otra idea en mente?' }),
-      h('p', { class: 'prosa', texto: 'Cuéntame qué celebras y lo diseñamos juntos, a tu medida.' }),
-      h('a', { class: 'boton boton-sorpresa', href: wa(), target: '_blank', rel: 'noopener', texto: 'Hablar con el chef' }),
+      h('p', { class: 'prosa', texto: 'Cuéntanos qué celebras y lo diseñamos juntos, a tu medida.' }),
+      h('a', { class: 'boton boton-sorpresa', href: wa(), target: '_blank', rel: 'noopener', texto: 'Hablar con nosotros' }),
     ]));
     var ctaIcono = app.querySelector('.eventos-cta-icono');
     if (ctaIcono) { ctaIcono.innerHTML = ICONOS_EVENTO.corazon; }
@@ -875,46 +1035,13 @@
 
   function renderServicios() {
     app.textContent = '';
-    app.appendChild(h('header', { class: 'receta-cabecera' }, [
+    var bloque = h('section', { class: 'proximamente' }, [
       h('span', { class: 'sobre-titulo', texto: 'Bon Mos · Servicios' }),
-      h('h1', { texto: 'Cómo funciona' }),
-      h('p', { class: 'prosa receta-descripcion', texto: 'Un chef privado en tu casa, sin complicaciones. Así es de fácil sentarte a la mesa.' }),
-    ]));
-    app.appendChild(h('div', { class: 'cenefa', 'aria-hidden': 'true' }));
-
-    var pasos = [
-      ['Eliges el menú.', ' Me cuentas la ocasión y los comensales, y te propongo platos de la carta o algo a medida.'],
-      ['Hago la compra.', ' Producto fresco del día, elegido pieza a pieza en el mercado.'],
-      ['Cocino en tu casa.', ' Llego con todo, cocino en tu cocina y sirvo recién hecho.'],
-      ['Y lo recojo todo.', ' Tú solo disfrutas y compartes mesa; de la cocina (y de dejarla limpia) me encargo yo.'],
-    ];
-    var pasosEl = h('section', { class: 'panel panel-pasos panel-servicio' }, [
-      h('h2', { texto: 'Paso a paso' }),
-      h('ol', { class: 'lista-pasos lista-servicio' }, pasos.map(function (par) {
-        return h('li', {}, [h('strong', { texto: par[0] }), document.createTextNode(par[1])]);
-      })),
+      h('h1', { class: 'proximamente-titulo', texto: 'Próximamente…' }),
+      h('p', { class: 'prosa', texto: 'Estamos preparando esta sección. Muy pronto podrás ver aquí todos nuestros servicios.' }),
     ]);
-    app.appendChild(pasosEl);
-
-    var incluye = [
-      'Menú diseñado a tu gusto, con producto de mercado',
-      'Compra y desplazamiento incluidos',
-      'Cocinado en tu casa y servido recién hecho',
-      'Recojo y dejo la cocina como estaba',
-      'Zona: València y alrededores (hasta 25 km)',
-      'Reservas con al menos 3 días de antelación',
-    ];
-    var incluyeEl = h('section', { class: 'panel panel-servicio' }, [
-      h('h2', { texto: 'Qué incluye' }),
-      h('ul', { class: 'lista-ingredientes lista-mercado' },
-        incluye.map(function (t) { return h('li', {}, [h('span', { texto: t })]); })),
-      h('div', { class: 'reserva-panel' }, [
-        h('p', { class: 'prosa', texto: '¿Te lo imaginas ya en tu mesa?' }),
-        h('a', { class: 'boton boton-sorpresa', href: wa(), target: '_blank', rel: 'noopener', texto: 'Reservar por WhatsApp' }),
-        h('a', { class: 'boton boton-suave', href: 'mailto:' + CFG.email, texto: 'O escríbeme un correo' }),
-      ]),
-    ]);
-    app.appendChild(incluyeEl);
+    app.appendChild(bloque);
+    revelar([bloque]);
   }
 
   // ---------- Menú hamburguesa ----------
@@ -1003,9 +1130,8 @@
 
   // Páginas que no dependen de la carta: se pintan de inmediato.
   if (pagina === 'servicios') { renderServicios(); }
-  else if (pagina === 'contacto') { renderContacto(); }
 
-  var necesitaDatos = pagina === 'inicio' || pagina === 'carta' || pagina === 'plato' || pagina === 'panel' || pagina === 'eventos';
+  var necesitaDatos = pagina === 'inicio' || pagina === 'carta' || pagina === 'plato' || pagina === 'panel' || pagina === 'eventos' || pagina === 'contacto';
 
   cargarPlatos().then(function (d) {
     aplicarLogo(d);
@@ -1014,9 +1140,11 @@
     else if (pagina === 'plato') { renderPlato(d); }
     else if (pagina === 'panel') { entrarPanel(d); }
     else if (pagina === 'eventos') { renderEventos(d.platos); }
+    else if (pagina === 'contacto') { renderContacto(d.ajustes); }
   }).catch(function (e) {
-    // Eventos funciona aunque no haya API: sin fotos, con iconos de respaldo.
+    // Eventos y Contacto funcionan aunque no haya API (con valores por defecto).
     if (pagina === 'eventos') { renderEventos([]); return; }
+    if (pagina === 'contacto') { renderContacto({}); return; }
     if (!necesitaDatos) { return; }
     app.textContent = '';
     app.appendChild(h('p', { class: 'vacio', texto: 'No se pudo cargar la carta (' + e.message + '). Recarga la página.' }));
